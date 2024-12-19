@@ -30,7 +30,7 @@ export default function Download({ formData }) {
                 break;
               }
               const chunk = decoder.decode(value, { stream: true });
-              const image = JSON.parse(chunk);
+              const image = JSON.parse(chunk.trim());
               console.log("--Image DATA--", image);
               setImages((prevImages) => [...prevImages, image]);
             } catch (err) {
