@@ -25,7 +25,10 @@ export default function Download({ formData }) {
           while (true) {
             try {
               const { value, done: doneReading } = await reader.read();
-              if (doneReading) break;
+              if (doneReading) {
+                console.log("Stream reading done");
+                break;
+              }
 
               const chunk = decoder.decode(value, { stream: true });
               //emit any unexpeted non whitespaced chacterter from chunk
@@ -35,7 +38,7 @@ export default function Download({ formData }) {
               setImages((prevImages) => [...prevImages, image]);
             } catch (err) {
               console.log("Error reading stream:", err);
-              console.log("Invalid Chunk", chunk);
+              console.log("Invalid value:", value);
             }
           }
         } catch (error) {
