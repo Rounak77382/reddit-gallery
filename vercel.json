@@ -1,0 +1,14 @@
+{
+  "redirects": [
+    {
+      "source": "/downloader",
+      "destination": "/api/downloader",
+      "permanent": true
+    },
+    {
+      "source": "/subreddits",
+      "destination": "/api/subreddits",
+      "permanent": true
+    }
+  ]
+}
