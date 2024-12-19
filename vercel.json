@@ -1,17 +1,18 @@
 {
+  "version": 2,
   "rewrites": [
     {
-      "source": "/api/downloader",
-      "destination": "/api/downloader"
+      "source": "/api/subreddits",
+      "destination": "/api/subreddits.js"
     },
     {
-      "source": "/api/subreddits",
-      "destination": "/api/subreddits"
+      "source": "/api/downloader",
+      "destination": "/api/downloader.js"
     }
   ],
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/api/(.*)",
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
@@ -24,8 +25,26 @@
         {
           "key": "Access-Control-Allow-Headers",
           "value": "Content-Type, Authorization"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
         }
       ]
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/subreddits",
+      "dest": "/api/subreddits.js",
+      "methods": ["GET"],
+      "headers": {
+        "cache-control": "s-maxage=3600"
+      }
     }
   ]
 }
