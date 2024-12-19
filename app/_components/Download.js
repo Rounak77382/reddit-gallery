@@ -17,6 +17,8 @@ export default function Download({ formData }) {
             `/api/downloader?subredditName=${searchTerm}&limit=${postLimit}&postType=${postType}&since=${postTime}`
           );
 
+          console.log("Response:", response);
+
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
           let done = false;
