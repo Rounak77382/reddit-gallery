@@ -24,15 +24,21 @@ export default function Download({ formData }) {
           let done = false;
 
           while (!done) {
-            const { value, done: doneReading } = await reader.read();
-            done = doneReading;
-            const chunk = decoder.decode(value, { stream: true });
-            const image = JSON.parse(chunk);
-            console.log("--Image DATA--", image);
-            setImages((prevImages) => [...prevImages, image]);
+            try {
+              const { value, done: doneReading } = await reader.read();
+              done = doneReading;
+              const chunk = decoder.decode(value, { stream: true });
+
+              const image = JSON.parse(chunk);
+              console.log("--Image DATA--", image);
+              setImages((prevImages) => [...prevImages, image]);
+            } catch (err) {
+              console.log("Error reading stream:", err);
+              continue;
+            }
           }
-        } catch{
-          console.warn("Error fetching images");
+        } catch (error) {
+          console.warn("Error fetching images:", error);
         }
       }
     }
