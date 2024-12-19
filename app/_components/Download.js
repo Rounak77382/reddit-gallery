@@ -28,12 +28,14 @@ export default function Download({ formData }) {
               if (doneReading) break;
 
               const chunk = decoder.decode(value, { stream: true });
+              //emit any unexpeted non whitespaced chacterter from chunk
 
               const image = JSON.parse(chunk);
               console.log("--Image DATA--", image);
               setImages((prevImages) => [...prevImages, image]);
             } catch (err) {
               console.log("Error reading stream:", err);
+              console.log("Invalid Chunk", chunk);
             }
           }
         } catch (error) {
