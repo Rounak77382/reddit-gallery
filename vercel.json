@@ -9,18 +9,6 @@
       "source": "/subreddits",
       "destination": "/api/subreddits",
       "permanent": true
-    },
-    {
-      "source": "/subreddits",
-      "has": [
-        {
-          "type": "query",
-          "key": "subredditName",
-          "value": "(.*)"
-        }
-      ],
-      "destination": "/api/subreddits?subredditName=:subredditName",
-      "permanent": true
     }
   ]
 }
