@@ -3,9 +3,8 @@
 import { useScale } from "./ScaleContext";
 import { useEffect, useState } from "react";
 import Card from "./Card";
-import dynamic from 'next/dynamic';
 
-const Download = ({ formData }) => {
+export default function Download({ formData }) {
   const [images, setImages] = useState([]);
   const { scaleValue } = useScale();
 
@@ -71,5 +70,4 @@ const Download = ({ formData }) => {
       ))}
     </div>
   );
-};
-export default dynamic(() => Promise.resolve(Download), { ssr: false });
+}
