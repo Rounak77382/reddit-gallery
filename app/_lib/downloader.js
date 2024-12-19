@@ -1,6 +1,5 @@
 import snoowrap from "snoowrap";
 import qs from "qs";
-import ora from "ora";
 import { getGif } from "../_components/Red";
 
 async function getAccessToken() {
@@ -81,7 +80,6 @@ export async function* downloadImages(
 
   console.log("r: ", r);
 
-  const spinner = ora("Fetching posts...").start();
   let name = subredditName;
 
   let subreddit;
