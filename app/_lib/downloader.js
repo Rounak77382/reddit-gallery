@@ -1,6 +1,8 @@
 import snoowrap from "snoowrap";
 import qs from "qs";
 import { getGif } from "../_components/Red";
+import dotenv from "dotenv";
+dotenv.config({ path: '.env' });
 
 async function getAccessToken() {
   const authString = `${process.env.praw_api_client_id}:${process.env.praw_api_client_secret}`;

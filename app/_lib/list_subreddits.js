@@ -3,7 +3,8 @@ import snoowrap from "snoowrap";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
 import NodeCache from "node-cache";
-dotenv.config();
+
+dotenv.config({ path: '.env' });
 
 const cache = new NodeCache({ stdTTL: 3600 }); // Cache TTL set to 1 hour
 
