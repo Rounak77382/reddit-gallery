@@ -4,8 +4,11 @@ export default function Video({ image }) {
   }
 
   return (
-    <video controls style={{ width: "100%", height: "100%", zIndex: "10" }}>
-      <source src={image.url} type="video/mp4" />
-    </video>
+    <iframe
+      src={image.url}
+      style={{ width: "100%", height: "100%", zIndex: "10" }}
+      allow="autoplay; encrypted-media"
+      allowFullScreen
+    ></iframe>
   );
 }
