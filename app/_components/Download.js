@@ -31,8 +31,8 @@ export default function Download({ formData }) {
             console.log("--Image DATA--", image);
             setImages((prevImages) => [...prevImages, image]);
           }
-        } catch (error) {
-          console.log("Error fetching images:", error);
+        } catch{
+          console.warn("Error fetching images");
         }
       }
     }
