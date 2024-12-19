@@ -3,8 +3,9 @@
 import { useScale } from "./ScaleContext";
 import { useEffect, useState } from "react";
 import Card from "./Card";
+import dynamic from 'next/dynamic';
 
-export default function Download({ formData }) {
+const Download = ({ formData }) => {
   const [images, setImages] = useState([]);
   const { scaleValue } = useScale();
 
@@ -29,10 +30,7 @@ export default function Download({ formData }) {
                 console.log("Stream reading done");
                 break;
               }
-
               const chunk = decoder.decode(value, { stream: true });
-              //emit any unexpeted non whitespaced chacterter from chunk
-
               const image = JSON.parse(chunk);
               console.log("--Image DATA--", image);
               setImages((prevImages) => [...prevImages, image]);
@@ -73,4 +71,5 @@ export default function Download({ formData }) {
       ))}
     </div>
   );
-}
+};
+export default dynamic(() => Promise.resolve(Download), { ssr: false });

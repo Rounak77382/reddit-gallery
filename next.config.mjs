@@ -1,10 +1,4 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: false,
-  webpack(config) {
-    config.optimization.splitChunks = false; // Disable code splitting
-    return config;
-  },
-};
+const nextConfig = { reactStrictMode: false };
 
 export default nextConfig;
