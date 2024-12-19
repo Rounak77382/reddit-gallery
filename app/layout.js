@@ -1,8 +1,7 @@
 // [app/layout.js](app/layout.js)
 import { Inter } from 'next/font/google';
 import "./globals.css";
-import dotenv from "dotenv";
-dotenv.config({ path: '.env' });
+
 
 
 
@@ -25,7 +24,7 @@ export default function RootLayout({ children }) {
         className={`${inter.variable} antialiased  overflow-y-scroll overflow-x-hidden`}
         suppressHydrationWarning={true}
       >
-        {process.env.praw_api_client_id}
+
         {children}
       </body>
     </html>
