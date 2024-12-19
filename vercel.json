@@ -1,14 +1,4 @@
 {
-  "redirects": [
-    {
-      "source": "/api/downloader",
-      "destination": "/api/downloader"
-    },
-    {
-      "source": "/api/subreddits",
-      "destination": "/api/subreddits"
-    }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",
