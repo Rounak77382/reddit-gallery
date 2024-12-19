@@ -1,14 +1,31 @@
 {
-  "redirects": [
+  "rewrites": [
     {
-      "source": "/downloader",
-      "destination": "/api/downloader",
-      "permanent": true
+      "source": "/api/downloader",
+      "destination": "/api/downloader"
     },
     {
-      "source": "/subreddits",
-      "destination": "/api/subreddits",
-      "permanent": true
+      "source": "/api/subreddits",
+      "destination": "/api/subreddits"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
     }
   ]
 }
