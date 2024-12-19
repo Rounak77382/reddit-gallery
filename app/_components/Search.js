@@ -7,7 +7,7 @@ import Image from "next/image";
 import Download from "./Download";
 
 export default function Search() {
-  const [searchTerm, setSearchTerm] = useState("Reddit");
+  const [searchTerm, setSearchTerm] = useState("");
   const [subreddits, setSubreddits] = useState([]);
   const [postTime, setPostTime] = useState("day");
   const [postType, setPostType] = useState("top");
@@ -37,18 +37,20 @@ export default function Search() {
       postType,
       postLimit,
     };
-    setFormData(data);
-    console.log("Form Data:", data);
+    if (JSON.stringify(data) !== JSON.stringify(formData)) {
+      setFormData(data);
+      console.log("handleSubmit Form Data:", data);
+    }
   };
 
   return (
     <>
       <form
-        className="flex justify-center items-center m-2.5 w-7/10 rounded-3xl p-0.5 px-2 bg-gray-800 z-10"
+        className="flex justify-center items-center m-2.5 w-7/10 rounded-3xl p-0.5 px-2 bg-primary z-10"
         onSubmit={handleSubmit}
       >
         <input
-          className="w-full p-2 border-none rounded-2xl bg-gray-800 text-white text-base outline-none"
+          className="w-full p-2 border-none rounded-2xl bg-primary text-foreground text-base outline-none"
           type="text"
           placeholder="Search subreddits"
           value={searchTerm}
@@ -62,7 +64,7 @@ export default function Search() {
         </datalist>
         <select
           id="postTime"
-          className="mx-1 w-[14%] p-2 m-0 border-none rounded-full bg-gray-900 text-white text-base outline-none text-center appearance-none"
+          className="mx-1 w-[14%] p-2 m-0 border-none rounded-full bg-secondary text-foreground text-base outline-none text-center appearance-none"
           value={postTime}
           onChange={(e) => setPostTime(e.target.value)}
         >
@@ -74,7 +76,7 @@ export default function Search() {
         </select>
         <select
           id="postType"
-          className="mx-1 w-[14%] p-2 m-0 border-none rounded-full bg-gray-900 text-white text-base outline-none text-center appearance-none"
+          className="mx-1 w-[14%] p-2 m-0 border-none rounded-full bg-secondary text-foreground text-base outline-none text-center appearance-none"
           value={postType}
           onChange={(e) => setPostType(e.target.value)}
         >
@@ -87,7 +89,7 @@ export default function Search() {
           type="number"
           id="postLimit"
           placeholder="10"
-          className="mx-1 w-[9%] p-2 m-0 border-none rounded-full bg-gray-900 text-white text-base outline-none text-center appearance-none"
+          className="mx-1 w-[9%] p-2 m-0 border-none rounded-full bg-secondary text-foreground text-base outline-none text-center appearance-none"
           style={{ appearance: "textfield" }}
           value={postLimit}
           onChange={(e) => setPostLimit(e.target.value)}

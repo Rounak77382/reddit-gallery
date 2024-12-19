@@ -1,16 +1,13 @@
-import { Geist, Geist_Mono } from "next/font/google";
+// [app/layout.js](app/layout.js)
+import { Inter } from 'next/font/google';
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const inter = Inter({
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'], // Specify all weights
+  subsets: ['latin'],
+  variable: '--font-inter', // Define a CSS variable for the font
+  display: 'swap',
 });
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 
 export const metadata = {
   title: "Reddit Gallery",
@@ -21,8 +18,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0b1416] overflow-y-scroll overflow-x-hidden `}
-
+        className={`${inter.variable} antialiased  overflow-y-scroll overflow-x-hidden`}
         suppressHydrationWarning={true}
       >
         {children}

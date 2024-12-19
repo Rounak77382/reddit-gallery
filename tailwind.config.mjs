@@ -8,8 +8,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
+        primary: 'var(--primary-color)',
+        secondary: 'var(--secondary-color)'
+      },
+      fontFamily: {
+        lato: "var(--font-lato)", // Use the CSS variable defined earlier
       },
     },
   },

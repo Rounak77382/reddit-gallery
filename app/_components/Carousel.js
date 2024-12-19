@@ -16,23 +16,34 @@ export default function Carousel({ urls }) {
       <img
         src={urls[currentIndex]}
         alt={`Slide ${currentIndex}`}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover rounded-lg transition-transform duration-500 ease-in-out"
         onError={(e) => {
           e.target.onerror = null;
         }}
       />
       <button
         onClick={prevImage}
-        className="absolute top-1/2 left-0 transform -translate-y-1/2 bg-black bg-opacity-50 text-white border-none cursor-pointer"
+        className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-opacity duration-300 cursor-pointer"
       >
         &#9664;
       </button>
       <button
         onClick={nextImage}
-        className="absolute top-1/2 right-0 transform -translate-y-1/2 bg-black bg-opacity-50 text-white border-none cursor-pointer"
+        className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-opacity duration-300 cursor-pointer"
       >
         &#9654;
       </button>
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+        {urls.map((_, index) => (
+          <span
+            key={index}
+            className={`h-2 w-2 rounded-full ${
+              index === currentIndex ? 'bg-white' : 'bg-gray-400'
+            } cursor-pointer`}
+            onClick={() => setCurrentIndex(index)}
+          ></span>
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,31 +1,36 @@
+// [app/_components/Download.js](app/_components/Download.js)
 "use client";
-
+import { useScale } from "./ScaleContext";
 import { useEffect, useState } from "react";
-import Carousel from "./Carousel";
-import SimpleImage from "./SimpleImage";
-import Video from "./Video";
+import Card from "./Card";
 
 export default function Download({ formData }) {
   const [images, setImages] = useState([]);
+  const { scaleValue } = useScale();
 
   useEffect(() => {
     async function fetchImages() {
       if (formData) {
-        const { searchTerm, postTime, postType, postLimit } = formData;
-        const response = await fetch(
-          `/api/downloader?subredditName=${searchTerm}&limit=${postLimit}&postType=${postType}&since=${postTime}`
-        );
+        try {
+          const { searchTerm, postTime, postType, postLimit } = formData;
+          const response = await fetch(
+            `/api/downloader?subredditName=${searchTerm}&limit=${postLimit}&postType=${postType}&since=${postTime}`
+          );
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let done = false;
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let done = false;
 
-        while (!done) {
-          const { value, done: doneReading } = await reader.read();
-          done = doneReading;
-          const chunk = decoder.decode(value, { stream: true });
-          const image = JSON.parse(chunk);
-          setImages((prevImages) => [...prevImages, image]);
+          while (!done) {
+            const { value, done: doneReading } = await reader.read();
+            done = doneReading;
+            const chunk = decoder.decode(value, { stream: true });
+            const image = JSON.parse(chunk);
+            console.log("--Image DATA--", image);
+            setImages((prevImages) => [...prevImages, image]);
+          }
+        } catch (error) {
+          console.log("Error fetching images:", error);
         }
       }
     }
@@ -34,25 +39,24 @@ export default function Download({ formData }) {
   }, [formData]);
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap" }}>
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        width: "100%",
+        padding: "1px",
+        zoom: scaleValue,
+      }}
+    >
       {images.map((image, index) => (
         <div
           key={index}
           style={{
             position: "relative",
             width: "auto",
-            height: "400px",
-            padding: "1%",
           }}
         >
-          {image.isVideo ||
-          (typeof image.url === "string" && image.url.endsWith(".mp4")) ? (
-            <Video image={image} />
-          ) : Array.isArray(image.url) ? (
-            <Carousel urls={image.url} />
-          ) : (
-            <SimpleImage url={image.url} />
-          )}
+          <Card imageData={image} />
         </div>
       ))}
     </div>
