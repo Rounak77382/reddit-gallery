@@ -1,6 +1,10 @@
 // [app/layout.js](app/layout.js)
 import { Inter } from 'next/font/google';
 import "./globals.css";
+import dotenv from "dotenv";
+dotenv.config({ path: '.env' });
+
+
 
 const inter = Inter({
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'], // Specify all weights
@@ -21,6 +25,7 @@ export default function RootLayout({ children }) {
         className={`${inter.variable} antialiased  overflow-y-scroll overflow-x-hidden`}
         suppressHydrationWarning={true}
       >
+        {process.env.praw_api_client_id}
         {children}
       </body>
     </html>
