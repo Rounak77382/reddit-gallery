@@ -5,13 +5,16 @@ import Carousel from "./Carousel";
 import SimpleImage from "./SimpleImage";
 import Video from "./Video";
 
-export default function Media({ image }) {
-  return image.isVideo ||
-    (typeof image.url === "string" && image.url.endsWith(".mp4")) ? (
-    <Video image={image} />
-  ) : Array.isArray(image.url) ? (
-    <Carousel urls={image.url} />
+
+export default function Media({ imageData }) {
+
+
+  return imageData.isVideo ||
+    (typeof imageData.url === "string" && imageData.url.endsWith(".mp4")) ? (
+    <Video imageData={imageData} />
+  ) : Array.isArray(imageData.url) ? (
+    <Carousel imageData={imageData} />
   ) : (
-    <SimpleImage url={image.url} />
+    <SimpleImage imageData={imageData} />
   );
 }

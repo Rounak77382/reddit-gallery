@@ -8,6 +8,7 @@ export async function GET(request) {
   const limit = parseInt(searchParams.get("limit")) || 10;
   const postType = searchParams.get("postType") || "top";
   const since = searchParams.get("since") || "all";
+  const r = searchParams.get("accessToken") || null;
 
   if (!subredditName) {
     return NextResponse.json(
@@ -23,7 +24,8 @@ export async function GET(request) {
           subredditName,
           limit,
           postType,
-          since
+          since,
+          r
         )) {
           controller.enqueue(JSON.stringify(imageData));
           console.log("Route side - Image data:", imageData);

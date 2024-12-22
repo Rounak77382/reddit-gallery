@@ -4,7 +4,7 @@ import { getGif } from "../_components/Red";
 import dotenv from "dotenv";
 dotenv.config({ path: ".env" });
 
-async function getAccessToken() {
+async function getReadOnlyAccessToken() {
   const authString = `${process.env.praw_api_client_id}:${process.env.praw_api_client_secret}`;
   const authBuffer = Buffer.from(authString, "utf8");
   const authBase64 = authBuffer.toString("base64");
@@ -64,7 +64,7 @@ export async function* downloadImages(
   signal = null
 ) {
   if (!r) {
-    r = await getAccessToken();
+    r = await getReadOnlyAccessToken();
     console.log("guest mode");
   } else {
     console.log("user mode");
@@ -155,6 +155,7 @@ export async function* downloadImages(
         }
       }
 
+      const id = post.id;
       const title = post.title;
       const author = post.author.name;
       let authorDp;
@@ -199,7 +200,7 @@ export async function* downloadImages(
           }
         }
         url = localUrls;
-      } else if (url.includes("redgifs.com/watch")) {
+      } else if (url.includes("redgifs")) {
         // This is a redgifs vid
         const gifId = url.split("/").pop().split("#")[0].split(".")[0];
         const link = await getGif(gifId);
@@ -207,6 +208,7 @@ export async function* downloadImages(
       }
 
       const imageData = {
+        id:id,
         url: url,
         aspect_ratio: aspectRatio,
         title: title,

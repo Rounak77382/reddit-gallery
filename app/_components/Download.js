@@ -73,18 +73,14 @@
 //   );
 // }
 
-
-
-
-
 "use client";
-import { useScale } from "./ScaleContext";
+import { useAppContext } from "./Context";
 import { useEffect, useState } from "react";
 import Card from "./Card";
 
 export default function Download({ formData }) {
   const [images, setImages] = useState([]);
-  const { scaleValue } = useScale();
+  const { state } = useAppContext();
 
   useEffect(() => {
     async function fetchImages() {
@@ -92,9 +88,10 @@ export default function Download({ formData }) {
         setImages([]);
         try {
           const { searchTerm, postTime, postType, postLimit } = formData;
-          const response = await fetch(
-            `/api/downloader?subredditName=${searchTerm}&limit=${postLimit}&postType=${postType}&since=${postTime}`
-          );
+
+          let response;
+
+            response = await fetch(`/api/downloader?subredditName=${searchTerm}&limit=${postLimit}&postType=${postType}&since=${postTime}${state.isLoggedIn ? `&r=${state.accessToken}` : ""}`);
 
           if (!response.body) {
             throw new Error("ReadableStream not supported in this browser.");
@@ -188,11 +185,11 @@ export default function Download({ formData }) {
         flexWrap: "wrap",
         width: "100%",
         padding: "1px",
-        zoom: scaleValue,
+        zoom: state.scaleValue,
       }}
     >
       {images.map((image, index) => (
-        <div key={index} style={{ position: "relative", width: "auto" }}>
+        <div key={index} style={{ position: "relative", width: "auto" }} className="">
           <Card imageData={image} />
         </div>
       ))}

@@ -3,12 +3,13 @@
 @tailwind components;
 @tailwind utilities;
 
+
 :root {
   --background: #ffffff;
   --foreground: #1f1f1f;
   --primary-color: #dbe4e9;
   --secondary-color: #cacaca;
-  /* Add more color variables as needed */
+  --font-vagrounded: 'VAG', sans-serif; 
 }
 
 :root.dark-mode {
@@ -24,6 +25,11 @@ body {
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
 }
 
-h1{
+h1 {
   color: #ff4500;
+  font-family: var(--font-vagrounded);
+}
+
+:root {
+  --font-vagrounded: "VAG Rounded", sans-serif;
 }
