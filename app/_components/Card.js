@@ -101,27 +101,26 @@ export default function Card({ imageData }) {
             >
               {author}
             </div>
-            <div
-              title={flair}
-              className="bg-[#d3f5ff] text-[#0b1416] px-1 rounded-lg max-h-4 text-xs overflow-hidden"
-            >
-              {flair}
-            </div>
-            <img
-              src="/icons/dot.svg"
-              alt="Separator"
-              className="h-3"
-            />
+            {flair !== "none" && (
+              <div
+                title={flair}
+                className="bg-[#d3f5ff] text-[#0b1416] px-1 rounded-lg max-h-4 text-xs overflow-hidden"
+              >
+                {flair}
+              </div>
+            )}
+            <img src="/icons/dot.svg" alt="Separator" className="h-3" />
+
             <div
               title={`${posted_since}`}
-              className="text-foreground text-xs"
+              className="text-foreground text-xs whitespace-nowrap overflow-hidden text-ellipsis flex-shrink-0"
             >
               {posted_since}
             </div>
           </a>
           <p
             title={title}
-            className="mx-1.5 py-0 text-sm text-foreground truncate"
+            className="text-sm text-foreground truncate max-w-full"
           >
             {title}
           </p>
