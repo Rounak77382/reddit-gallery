@@ -1,16 +1,14 @@
-
 import { useAppContext } from "./Context";
 
 export default function SimpleImage({ imageData }) {
-
   const { state } = useAppContext();
   const { isNSFWAllowed } = state;
 
   return (
-    <div className="relative overflow-hidden w-full h-[400px] min-w-[275px] rounded-lg ">
+    <div className="relative overflow-hidden w-full h-[400px] min-w-[275px] max-w-[800px] rounded-lg flex justify-center items-center bg-[#1a282d]">
       {imageData.isNSFW && !isNSFWAllowed && (
         <div className="absolute top-2 right-2 z-30">
-          <span className="bg-red-500/80 text-white px-2 py-1 rounded text-sm font-bold">
+          <span className="bg-red-500/80 text-white rounded-lg text-sm font-bold">
             NSFW
           </span>
         </div>
@@ -19,12 +17,12 @@ export default function SimpleImage({ imageData }) {
         src={imageData.url}
         alt={imageData.url}
         className={`
-          w-full h-[400px] min-w-[275px] 
+          max-w-full max-h-full
+          w-auto h-auto
           rounded-lg 
           transition-all ease duration-500 
           relative z-10 
-          bg-[#000000] 
-          object-cover
+          object-contain
           ${imageData.isNSFW ? "blur-xl" : ""}
           ${isNSFWAllowed ? "blur-none" : ""}
         `}

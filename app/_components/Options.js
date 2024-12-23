@@ -98,7 +98,7 @@ export default function Options() {
       <div className="flex justify-center w-[60px] p-2 mx-[2px] rounded-[20px] bg-[#1a282d] text-white hover:bg-[#472323] active:scale-90 transition-all duration-300 ease-in-out">
         <button
           onClick={handleNSFWToggle}
-          className="text-white bg-transparent border-none font-medium cursor-pointer text-[15px]"
+          className={`text-white bg-transparent border-none font-medium cursor-pointer text-[15px] ${state.isNSFWAllowed ? "text-red-500" : "text-green-500"}`}
         >
           {state.isNSFWAllowed ? "NSFW" : "SFW"}
         </button>
