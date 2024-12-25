@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import snoowrap from "snoowrap";
 import crypto from "crypto";
 
-const state = crypto.randomBytes(16).toString("hex");
+ const state = crypto.randomBytes(16).toString("hex");
 
 export async function GET() {
   let authUrl = snoowrap.getAuthUrl({

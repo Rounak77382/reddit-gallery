@@ -14,6 +14,7 @@ export default function Options() {
 
   const nameRef = useRef("Nan");
   const profilePictureRef = useRef("/icons/dp.png");
+  const isUserAdultRef = useRef(false);
 
   const handleLogin = useCallback(() => {
     const width = window.innerWidth * 0.75;
@@ -43,7 +44,10 @@ export default function Options() {
       if (event.data.type === "oauth-callback") {
         console.log("Received OAuth callback:", event.data);
 
-        const { r, name, dp } = event.data;
+        const { r, name, dp, isUserAdult } = event.data;
+        console.log("name : ", name);
+        console.log("dp : ", dp);
+        console.log("isUserAdult : ", isUserAdult);
         if (r) {
           console.log("Login successful:", r);
           dispatch({
@@ -54,6 +58,7 @@ export default function Options() {
 
           nameRef.current = name;
           profilePictureRef.current = dp;
+          isUserAdultRef.current = Boolean(isUserAdult);
         }
       }
     };
@@ -89,8 +94,13 @@ export default function Options() {
     if (state.isNSFWAllowed) {
       dispatch({ type: "BLOCK_NSFW" });
     } else {
-      if (state.isLoggedIn) dispatch({ type: "ALLOW_NSFW" });
-      else alert("Please login to view NSFW content");
+      if (state.isLoggedIn && isUserAdultRef.current)
+        dispatch({ type: "ALLOW_NSFW" });
+      else if (!state.isLoggedIn) alert("Please login to view NSFW content");
+      else if (!isUserAdultRef.current)
+        alert(
+          'Turn on "Show mature content" in your Reddit settings to view NSFW content'
+        );
     }
   };
 
@@ -99,7 +109,7 @@ export default function Options() {
       <div className="flex justify-center w-[60px] p-2 mx-[2px] rounded-[20px] bg-[#1a282d] text-white hover:bg-[#472323] active:scale-90 transition-all duration-300 ease-in-out">
         <button
           onClick={handleNSFWToggle}
-          className={`text-white bg-transparent border-none font-medium cursor-pointer text-[15px] ${
+          className={`bg-transparent border-none font-medium cursor-pointer text-[15px] ${
             state.isNSFWAllowed ? "text-red-500" : "text-green-500"
           }`}
         >
@@ -133,7 +143,7 @@ export default function Options() {
         {showDropdown && (
           <div
             ref={dropdownRef}
-            className="absolute right-0 mt-2 w-80 bg-[#1a282d] rounded-lg shadow-xl py-2 z-50"
+            className="absolute right-0 mt-2 !w-80  bg-[#1a282d] rounded-lg shadow-xl py-2 z-50 "
           >
             {state.isLoggedIn ? (
               <div className="px-4 py-3 border-b border-gray-700">

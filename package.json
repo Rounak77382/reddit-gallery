@@ -12,11 +12,13 @@
     "@vercel/speed-insights": "^1.1.0",
     "dotenv": "^16.4.7",
     "fs": "^0.0.1-security",
+    "hls.js": "^1.5.18",
     "next": "15.1.0",
     "node-cache": "^5.1.2",
     "node-fetch": "^2.7.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-shimmer-effects": "^1.0.3",
     "snoowrap": "^1.23.0"
   },
   "devDependencies": {

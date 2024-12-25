@@ -105,7 +105,11 @@ export default function Search() {
             -moz-appearance: textfield;
           }
         `}</style>
-        <button id="formbutton" type="submit" className="h-10 w-10 flex justify-center items-center mx-1" >
+        <button
+          id="formbutton"
+          type="submit"
+          className="h-10 w-10 flex justify-center items-center mx-1"
+        >
           <Image id="searchbtn" src={searchIcon} alt="Search Icon" />
         </button>
       </form>

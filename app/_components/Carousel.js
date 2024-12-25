@@ -49,7 +49,7 @@ export default function Carousel({ imageData }) {
         </div>
       )}
       <div
-        className="relative h-[400px] rounded-lg transition ease duration-500 z-10 bg-[#1a282d] object-cover overflow-clip flex justify-center items-center"
+        className="relative h-[400px] rounded-lg transition ease duration-500 z-10 bg-[#000000] object-cover overflow-clip flex justify-center items-center"
         style={{ width: `${maxWidth}px` }}
       >
         <img

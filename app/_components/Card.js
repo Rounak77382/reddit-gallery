@@ -87,9 +87,9 @@ export default function Card({ imageData }) {
       id={id}
       className="relative h-[400px] flex justify-center items-center m-5 group hover:z-50 hover:scale-105 transition-transform duration-500 ease-in-out shadow-lg shadow-black/50"
     >
-      <div className="flex flex-col justify-between absolute w-full bg-primary text-foreground h-[125%] rounded-lg transform scale-y-[0.75] transition-transform duration-500 ease group-hover:scale-y-[1] group-hover:-translate-y-3.5 z-10 p-1 shadow-lg shadow-black/50 opacity-0 group-hover:opacity-100">
-        <div className="flex flex-col justify-start items-start m-0 p-0 h-fit space-y-2">
-          <a href={userurl} className="flex items-center space-x-1">
+      <div className="flex flex-col justify-between absolute w-full bg-primary text-foreground h-[125%] rounded-lg transform scale-y-[0.75] transition-transform duration-500 ease group-hover:scale-y-[1] group-hover:-translate-y-3.5 z-10 p-1 shadow-lg shadow-black/50 opacity-0 group-hover:opacity-100 ">
+        <div className="flex flex-col justify-start items-start m-0 p-0 h-fit space-y-2 ">
+          <a href={userurl} className="flex items-center">
             <img
               src={author_dp}
               alt={`${author}'s profile`}
@@ -97,7 +97,7 @@ export default function Card({ imageData }) {
             />
             <div
               title={author}
-              className="text-aqua font-bold text-sm max-h-4 -mt-1 px-1"
+              className="text-aqua font-bold text-sm max-h-4 -mt-1 ml-1 px-1 truncate"
             >
               {author}
             </div>
@@ -109,18 +109,18 @@ export default function Card({ imageData }) {
                 {flair}
               </div>
             )}
-            <img src="/icons/dot.svg" alt="Separator" className="h-3" />
+            <img src="/icons/dot.svg" alt="Separator" className="w-5" />
 
             <div
               title={`${posted_since}`}
-              className="text-foreground text-xs whitespace-nowrap overflow-hidden text-ellipsis flex-shrink-0"
+              className="text-foreground text-xs whitespace-nowrap text-ellipsis flex-shrink-0 truncate"
             >
               {posted_since}
             </div>
           </a>
           <p
             title={title}
-            className="text-sm text-foreground truncate max-w-full"
+            className="text-base text-foreground truncate max-w-full"
           >
             {title}
           </p>

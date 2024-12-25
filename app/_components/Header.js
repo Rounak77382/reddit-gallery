@@ -19,13 +19,18 @@ const VAG = localFont({
 export default function Header() {
   return (
     <AppProvider>
-      <div className="flex justify-between items-center flex-wrap border-b border-[#1a282d] h-auto mt-2 relative z-1">
-        <h1
-          className={`${VAG.variable} px-5 w-fit my-2 text-4xl font-extrabold `}
-        >
-          reddit gallery
-        </h1>
-        <div className="flex items-center justify-center w-[8/10]">
+      <div className="flex justify-between items-center flex-nowrap border-b border-[#1a282d] h-auto sticky top-0 bg-[#0f1419] z-50">
+        <div className="flex items-center px-5">
+          <img
+            src="/icons/test_out_33.png"
+            alt="icon"
+            className="w-12 h-12 mr-2"
+          />
+          <h1 className={`${VAG.variable} w-fit my-2 text-3xl font-extrabold`}>
+            reddit gallery
+          </h1>
+        </div>
+        <div className="flex items-center justify-center flex-grow">
           <Search />
           <Scale />
         </div>

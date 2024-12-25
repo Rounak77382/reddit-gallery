@@ -205,10 +205,12 @@ export async function* downloadImages(
         const gifId = url.split("/").pop().split("#")[0].split(".")[0];
         const link = await getGif(gifId);
         url = link;
+      } else if (url.includes("v.redd.it")) {
+        url = post.secure_media.reddit_video.hls_url;
       }
 
       const imageData = {
-        id:id,
+        id: id,
         url: url,
         aspect_ratio: aspectRatio,
         title: title,

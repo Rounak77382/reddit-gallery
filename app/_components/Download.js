@@ -77,21 +77,36 @@
 import { useAppContext } from "./Context";
 import { useEffect, useState } from "react";
 import Card from "./Card";
+import { ShimmerThumbnail } from "react-shimmer-effects";
 
 export default function Download({ formData }) {
   const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [shimmerCount, setShimmerCount] = useState(0);
   const { state } = useAppContext();
+
+  useEffect(() => {
+    if (formData?.postLimit) {
+      console.log("Updating shimmer count to:", formData.postLimit);
+      setShimmerCount(Number(formData.postLimit));
+    }
+  }, [formData]);
 
   useEffect(() => {
     async function fetchImages() {
       if (formData) {
         setImages([]);
+        setIsLoading(true);
         try {
           const { searchTerm, postTime, postType, postLimit } = formData;
 
           let response;
 
-            response = await fetch(`/api/downloader?subredditName=${searchTerm}&limit=${postLimit}&postType=${postType}&since=${postTime}${state.isLoggedIn ? `&r=${state.accessToken}` : ""}`);
+          response = await fetch(
+            `/api/downloader?subredditName=${searchTerm}&limit=${postLimit}&postType=${postType}&since=${postTime}${
+              state.isLoggedIn ? `&r=${state.accessToken}` : ""
+            }`
+          );
 
           if (!response.body) {
             throw new Error("ReadableStream not supported in this browser.");
@@ -109,12 +124,13 @@ export default function Download({ formData }) {
           }
         } catch (error) {
           console.warn("Error fetching images:", error);
+        } finally {
+          setIsLoading(false);
         }
       }
     }
-
     fetchImages();
-  }, [formData]);
+  }, [formData, state.accessToken, state.isLoggedIn]);
 
   function parseNDJSON() {
     let ndjsonBuffer = "";
@@ -177,6 +193,23 @@ export default function Download({ formData }) {
       },
     });
   }
+  const ShimmerCards = () => (
+    <>
+      {console.log("No of shimmer cards:", shimmerCount)}
+      <div className="flex flex-wrap w-full p-0 m-0">
+        {Array(shimmerCount)
+          .fill(0)
+          .map((_, index) => (
+            <div
+              key={index}
+              className="relative w-[400px] h-[400px] m-5 opacity-5 shadow-lg shadow-black/50"
+            >
+              <ShimmerThumbnail height={400} rounded />
+            </div>
+          ))}
+      </div>
+    </>
+  );
 
   return (
     <div
@@ -188,11 +221,19 @@ export default function Download({ formData }) {
         zoom: state.scaleValue,
       }}
     >
-      {images.map((image, index) => (
-        <div key={index} style={{ position: "relative", width: "auto" }} className="">
-          <Card imageData={image} />
-        </div>
-      ))}
+      {isLoading ? (
+        <ShimmerCards />
+      ) : (
+        images.map((image, index) => (
+          <div
+            key={index}
+            style={{ position: "relative", width: "auto" }}
+            className=""
+          >
+            <Card imageData={image} />
+          </div>
+        ))
+      )}
     </div>
   );
 }

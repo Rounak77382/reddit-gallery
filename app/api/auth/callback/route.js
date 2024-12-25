@@ -17,10 +17,17 @@ export async function GET(request) {
         });
 
         const userdetails = await r.getMe();
-        console.log("r.getMe() : ", userdetails);
+        const userPrefs = await r.getPreferences();
+        //console.log("r.getMe() : ", userdetails);
 
         const name = userdetails.name;
         const dp = userdetails.icon_img;
+        const isUserAdult = userPrefs["over_18"];
+
+        console.log("name : ", name);
+        console.log("dp : ", dp);
+        console.log("isUserAdult : ", isUserAdult);
+
 
         // Return HTML that posts the Reddit instance to parent window
         return new Response(
@@ -31,7 +38,8 @@ export async function GET(request) {
                             type: 'oauth-callback',
                             r: ${JSON.stringify(r)},
                             name: ${JSON.stringify(name)},
-                            dp: ${JSON.stringify(dp)}
+                            dp: ${JSON.stringify(dp)},
+                            isUserAdult: ${JSON.stringify(isUserAdult)},
                         }, '*');
                         window.close();
                     </script>

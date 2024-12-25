@@ -1,4 +1,30 @@
 import { useAppContext } from "./Context";
+import { useEffect, useRef } from "react";
+import Hls from "hls.js";
+
+const HLSPlayer = ({ url, title, controls }) => {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const hls = new Hls();
+    if (videoRef.current) {
+      hls.loadSource(url);
+      hls.attachMedia(videoRef.current);
+    }
+    return () => hls.destroy();
+  }, [url]);
+
+  return (
+    <video
+      ref={videoRef}
+      className="w-full h-[400px] min-w-[250px] rounded-lg bg-[#1a282d] object-cover relative z-20 hover:z-40"
+      controls={controls}
+      preload="metadata"
+      alt={title}
+      onLoadedMetadata={(e) => (e.currentTarget.volume = 0.25)}
+    />
+  );
+};
 
 export default function Video({ imageData }) {
   const { state } = useAppContext();
@@ -17,21 +43,22 @@ export default function Video({ imageData }) {
           </span>
         </div>
       )}
-      <video
-        src={imageData.url}
-        className={`
-          w-full h-[400px] min-w-[250px] 
-          rounded-lg 
-          transition-all ease duration-500 
-          relative z-10 
-          bg-[#1a282d] 
-          object-cover 
-          overflow-clip 
-          overflow-clip-margin-[content-box]
-          ${imageData.isNSFW && !isNSFWAllowed ? 'blur-xl' : ''}
-        `}
-        controls={!imageData.isNSFW || isNSFWAllowed}
-      ></video>
+      <div className={imageData.isNSFW && !isNSFWAllowed ? "blur-xl" : ""}>
+        {imageData.url?.includes(".m3u8") ? (
+          <HLSPlayer
+            url={imageData.url}
+            title={imageData.title}
+            controls={!imageData.isNSFW || isNSFWAllowed}
+          />
+        ) : (
+          <video
+            src={imageData.url}
+            className="w-full h-[400px] min-w-[250px] rounded-lg"
+            controls={!imageData.isNSFW || isNSFWAllowed}
+            onLoadedMetadata={(e) => (e.currentTarget.volume = 0.25)}
+          />
+        )}
+      </div>
     </div>
   );
 }
