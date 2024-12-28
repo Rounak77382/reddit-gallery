@@ -1,8 +1,18 @@
 import snoowrap from "snoowrap";
 import qs from "qs";
 import { getGif } from "../_components/Red";
+import { marked } from "marked";
 import dotenv from "dotenv";
 dotenv.config({ path: ".env" });
+
+function processMarkdown(text) {
+  try {
+    return marked.parse(text);
+  } catch (error) {
+    console.error("Error parsing markdown:", error);
+    return text;
+  }
+}
 
 async function getReadOnlyAccessToken() {
   const authString = `${process.env.praw_api_client_id}:${process.env.praw_api_client_secret}`;
@@ -207,6 +217,10 @@ export async function* downloadImages(
         url = link;
       } else if (url.includes("v.redd.it")) {
         url = post.secure_media.reddit_video.hls_url;
+      } else {
+        //url will be equal to the post writings as it does not contain any media
+        const body = post.selftext;
+        url = body ? processMarkdown(body) : body;
       }
 
       const imageData = {

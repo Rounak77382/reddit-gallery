@@ -43,7 +43,13 @@ export default function Video({ imageData }) {
           </span>
         </div>
       )}
-      <div className={imageData.isNSFW && !isNSFWAllowed ? "blur-xl" : ""}>
+      <div
+        className={
+          imageData.isNSFW && !isNSFWAllowed
+            ? "blur-xl relative z-20 hover:z-40"
+            : ""
+        }
+      >
         {imageData.url?.includes(".m3u8") ? (
           <HLSPlayer
             url={imageData.url}

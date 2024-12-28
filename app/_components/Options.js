@@ -60,8 +60,6 @@ export default function Options() {
           profilePictureRef.current = dp;
           isUserAdultRef.current = Boolean(isUserAdult);
         }
-      } else {
-        console.log("Received message:", event.data);
       }
     };
 
