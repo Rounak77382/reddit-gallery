@@ -35,7 +35,7 @@ const HLSPlayer = ({ url, title, controls }) => {
         URL.revokeObjectURL(blobUrl);
       }
     };
-  }, [url]);
+  }, [blobUrl, url]);
 
   return (
     <video
