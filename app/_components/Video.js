@@ -53,7 +53,7 @@ export default function Video({ imageData }) {
         ) : (
           <video
             src={imageData.url}
-            className="w-full h-[400px] min-w-[250px] rounded-lg"
+            className="w-full h-[400px] min-w-[250px] rounded-lg relative z-20 hover:z-40"
             controls={!imageData.isNSFW || isNSFWAllowed}
             onLoadedMetadata={(e) => (e.currentTarget.volume = 0.25)}
           />
