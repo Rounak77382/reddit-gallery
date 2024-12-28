@@ -16,7 +16,8 @@ export default function Media({ imageData }) {
     ".webp",
     ".tiff",
   ];
-  const urlWithoutParams = imageData.url.split("?")[0];
+  const urlWithoutParams =
+    typeof imageData.url === "string" ? imageData.url.split("?")[0] : "";
 
   if (
     imageData.isVideo ||
@@ -30,10 +31,10 @@ export default function Media({ imageData }) {
     return <SimpleImage imageData={imageData} />;
   } else {
     return (
-      <div className="w-full h-[400px] rounded-lg max-w-[560px] bg-primary overflow-y-hidden hover:overflow-y-auto prose prose-invert">
+      <div className="w-full h-[400px] rounded-lg max-w-[560px] min-w-[250px] bg-primary overflow-y-hidden hover:overflow-y-auto prose prose-invert">
         <div
-          className="text-white text-sm relative z-20 hover:z-40 p-4 bg-primary"
-          dangerouslySetInnerHTML={{ __html: imageData.url }}
+          className="text-white h-full text-sm relative z-20 hover:z-40 p-4 bg-black rounded-t-lg"
+          dangerouslySetInnerHTML={{ __html: imageData.body }}
         />
       </div>
     );

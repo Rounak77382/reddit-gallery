@@ -17,7 +17,7 @@ const HLSPlayer = ({ url, title, controls }) => {
   return (
     <video
       ref={videoRef}
-      className="w-full h-[400px] min-w-[250px] rounded-lg bg-[#1a282d] object-cover relative z-20 hover:z-40"
+      className="w-full h-[400px] min-w-[250px] transition-all ease duration-500 rounded-lg bg-[#1a282d] object-cover relative z-20 hover:z-40"
       controls={controls}
       preload="metadata"
       alt={title}
@@ -35,7 +35,7 @@ export default function Video({ imageData }) {
   }
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden  ">
       {imageData.isNSFW && !isNSFWAllowed && (
         <div className="absolute top-2 right-2 z-30">
           <span className="bg-red-500/80 text-white px-2 py-1 rounded text-sm font-bold">
@@ -44,11 +44,11 @@ export default function Video({ imageData }) {
         </div>
       )}
       <div
-        className={
+        className={`transition-all ease duration-500 ${
           imageData.isNSFW && !isNSFWAllowed
             ? "blur-xl relative z-20 hover:z-40"
             : ""
-        }
+        }`}
       >
         {imageData.url?.includes(".m3u8") ? (
           <HLSPlayer
@@ -59,7 +59,7 @@ export default function Video({ imageData }) {
         ) : (
           <video
             src={imageData.url}
-            className="w-full h-[400px] min-w-[250px] rounded-lg relative z-20 hover:z-40"
+            className="w-full h-[400px] min-w-[250px] transition-all ease duration-500  rounded-lg relative z-20 hover:z-40"
             controls={!imageData.isNSFW || isNSFWAllowed}
             onLoadedMetadata={(e) => (e.currentTarget.volume = 0.25)}
           />

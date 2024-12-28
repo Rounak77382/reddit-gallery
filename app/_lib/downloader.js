@@ -169,6 +169,7 @@ export async function* downloadImages(
       const title = post.title;
       const author = post.author.name;
       let authorDp;
+      let body = post.selftext;
       try {
         authorDp = await post.author.icon_img;
         if (!authorDp) {
@@ -217,10 +218,6 @@ export async function* downloadImages(
         url = link;
       } else if (url.includes("v.redd.it")) {
         url = post.secure_media.reddit_video.hls_url;
-      } else {
-        //url will be equal to the post writings as it does not contain any media
-        const body = post.selftext;
-        url = body ? processMarkdown(body) : body;
       }
 
       const imageData = {
@@ -228,6 +225,7 @@ export async function* downloadImages(
         url: url,
         aspect_ratio: aspectRatio,
         title: title,
+        body: body,
         author,
         author_dp: authorDp,
         posted_since: postedSince,
