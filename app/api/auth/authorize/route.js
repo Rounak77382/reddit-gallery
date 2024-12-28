@@ -10,7 +10,7 @@ export async function GET(request) {
   const host = request.headers.get("host");
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
   const redirectUri = `${protocol}://${host}/api/auth/callback`;
-  console.log("redirectUri : ", redirectUri);
+  console.log("RedirectUri : ", redirectUri);
 
   let authUrl = snoowrap.getAuthUrl({
     clientId: process.env.praw_api_client_id,
