@@ -1,37 +1,41 @@
-// /api/auth/callback 
-import { NextResponse } from 'next/server';
-import snoowrap from 'snoowrap';
+// /api/auth/callback
+import { NextResponse } from "next/server";
+import snoowrap from "snoowrap";
 
 export async function GET(request) {
-    const { searchParams } = new URL(request.url);
-    const code = searchParams.get('code');
-    const state = searchParams.get('state');
+  const { searchParams } = new URL(request.url);
+  const code = searchParams.get("code");
+  const state = searchParams.get("state");
 
-    try {
-        const r = await snoowrap.fromAuthCode({
-            code: code,
-            userAgent: "testscript by RS_ted",
-            clientId: process.env.praw_api_client_id,
-            clientSecret: process.env.praw_api_client_secret,
-            redirectUri: "http://localhost:3000/api/auth/callback",
-        });
+  // Get the host from the request URL
+  const host = request.headers.get("host");
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+  const redirectUri = `${protocol}://${host}/api/auth/callback`;
 
-        const userdetails = await r.getMe();
-        const userPrefs = await r.getPreferences();
-        //console.log("r.getMe() : ", userdetails);
+  try {
+    const r = await snoowrap.fromAuthCode({
+      code: code,
+      userAgent: "testscript by RS_ted",
+      clientId: process.env.praw_api_client_id,
+      clientSecret: process.env.praw_api_client_secret,
+      redirectUri: redirectUri,
+    });
 
-        const name = userdetails.name;
-        const dp = userdetails.icon_img;
-        const isUserAdult = userPrefs["over_18"];
+    const userdetails = await r.getMe();
+    const userPrefs = await r.getPreferences();
+    //console.log("r.getMe() : ", userdetails);
 
-        console.log("name : ", name);
-        console.log("dp : ", dp);
-        console.log("isUserAdult : ", isUserAdult);
+    const name = userdetails.name;
+    const dp = userdetails.icon_img;
+    const isUserAdult = userPrefs["over_18"];
 
+    console.log("name : ", name);
+    console.log("dp : ", dp);
+    console.log("isUserAdult : ", isUserAdult);
 
-        // Return HTML that posts the Reddit instance to parent window
-        return new Response(
-            `<html>
+    // Return HTML that posts the Reddit instance to parent window
+    return new Response(
+      `<html>
                 <body>
                     <script>
                         window.opener.postMessage({
@@ -45,13 +49,13 @@ export async function GET(request) {
                     </script>
                 </body>
             </html>`,
-            {
-                headers: {
-                    'Content-Type': 'text/html',
-                },
-            }
-        );
-    } catch (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+      {
+        headers: {
+          "Content-Type": "text/html",
+        },
+      }
+    );
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
