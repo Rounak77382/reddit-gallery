@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@vercel/speed-insights": "^1.1.0",
+    "crypto-js": "^4.2.0",
     "dotenv": "^16.4.7",
     "fs": "^0.0.1-security",
     "hls.js": "^1.5.18",

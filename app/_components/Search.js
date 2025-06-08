@@ -5,8 +5,10 @@ import { createPortal } from "react-dom";
 import searchIcon from "../../public/icons/search.svg";
 import Image from "next/image";
 import Download from "./Download";
+import { useAppContext } from "./Context";
 
 export default function Search() {
+  const { dispatch } = useAppContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [subreddits, setSubreddits] = useState([]);
   const [postTime, setPostTime] = useState("day");
@@ -31,12 +33,21 @@ export default function Search() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Reset the scale to 1.0
+    dispatch({ type: "RESET_SCALE" });
+    
+    // Dispatch a custom event to notify Scale component
+    const searchEvent = new Event("searchSubmitted");
+    window.dispatchEvent(searchEvent);
+    
     const data = {
       searchTerm,
       postTime,
       postType,
       postLimit,
     };
+    
     if (JSON.stringify(data) !== JSON.stringify(formData)) {
       setFormData(data);
       console.log("handleSubmit Form Data:", data);
@@ -64,7 +75,7 @@ export default function Search() {
         </datalist>
         <select
           id="postTime"
-          className="mx-1 w-[14%] p-2 m-0 border-none rounded-full bg-secondary text-foreground text-base outline-none text-center appearance-none"
+          className="mx-1 min-w-fit p-2 m-0 border-none rounded-full bg-secondary text-foreground text-base outline-none text-center appearance-none"
           value={postTime}
           onChange={(e) => setPostTime(e.target.value)}
         >
@@ -76,7 +87,7 @@ export default function Search() {
         </select>
         <select
           id="postType"
-          className="mx-1 w-[14%] p-2 m-0 border-none rounded-full bg-secondary text-foreground text-base outline-none text-center appearance-none"
+          className="mx-1 min-w-fit p-2 m-0 border-none rounded-full bg-secondary text-foreground text-base outline-none text-center appearance-none"
           value={postType}
           onChange={(e) => setPostType(e.target.value)}
         >

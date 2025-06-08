@@ -20,7 +20,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark-mode">
       <body
         className={`${inter.variable} antialiased  overflow-y-scroll overflow-x-hidden`}
         // suppressHydrationWarning={true}

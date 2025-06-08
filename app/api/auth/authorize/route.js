@@ -1,10 +1,19 @@
-// /api/auth/authorize
-
 import { NextResponse } from "next/server";
 import snoowrap from "snoowrap";
-import crypto from "crypto";
+import { randomBytes } from "crypto";
 
-const state = crypto.randomBytes(16).toString("hex");
+// Create the state in a safe way
+function generateRandomState() {
+  try {
+    return randomBytes(16).toString("hex");
+  } catch (error) {
+    // Fallback for environments where randomBytes isn't available
+    return Math.random().toString(36).substring(2, 15) + 
+           Math.random().toString(36).substring(2, 15);
+  }
+}
+
+const state = generateRandomState();
 
 export async function GET(request) {
   const host = request.headers.get("host");

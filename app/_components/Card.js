@@ -5,6 +5,31 @@ import Media from "./Media";
 import { useState } from "react";
 import { useAppContext } from "./Context";
 
+// Helper function to convert vote string (like "10K", "1.5M") to number
+const parseVotes = (voteStr) => {
+  if (typeof voteStr === "number") return voteStr;
+
+  const str = String(voteStr).trim().toUpperCase();
+  if (str.endsWith("K")) {
+    return parseFloat(str.replace("K", "")) * 1000;
+  } else if (str.endsWith("M")) {
+    return parseFloat(str.replace("M", "")) * 1000000;
+  } else {
+    return parseInt(str) || 0;
+  }
+};
+
+// Helper function to format number back to string with K, M notation
+const formatVotes = (votes) => {
+  if (votes >= 1000000) {
+    return Math.floor(votes / 1000000) + "M";
+  } else if (votes >= 1000) {
+    return Math.floor(votes / 1000) + "K";
+  } else {
+    return votes.toString();
+  }
+};
+
 export default function Card({ imageData }) {
   const {
     id,
@@ -25,10 +50,9 @@ export default function Card({ imageData }) {
   } = imageData;
 
   const { state } = useAppContext();
-  const [voteStatus, setVoteStatus] = useState(0); // -1 for downvote, 0 for no vote, 1 for upvote
-  const [localUpvotes, setLocalUpvotes] = useState(parseInt(upvotes));
-  const [localDownvotes, setLocalDownvotes] = useState(parseInt(downvotes));
-
+  const [voteStatus, setVoteStatus] = useState(0);
+  const [localUpvotes, setLocalUpvotes] = useState(upvotes.toUpperCase());
+  const [localDownvotes, setLocalDownvotes] = useState(downvotes.toUpperCase());
   const handleVote = async (direction) => {
     if (!state.isLoggedIn) {
       alert("Please log in to vote");
@@ -44,32 +68,54 @@ export default function Card({ imageData }) {
         body: JSON.stringify({
           id: id,
           direction: direction,
-          r: state.accessToken,
+          accessToken: state.accessToken,
         }),
       });
-
       if (response.ok) {
         // Update local state
         const newVoteStatus = direction === voteStatus ? 0 : direction;
         setVoteStatus(newVoteStatus);
 
-        // Update vote counts
+        // Don't update displayed vote counts if they're in K or M format
+        // Check if upvotes contains K or M
+        const upvotesHasNotation =
+          typeof localUpvotes === "string" &&
+          (localUpvotes.includes("K") || localUpvotes.includes("M"));
+
+        // Check if downvotes contains K or M
+        const downvotesHasNotation =
+          typeof localDownvotes === "string" &&
+          (localDownvotes.includes("K") || localDownvotes.includes("M"));
+
+        // Only update when not in K/M notation
         if (newVoteStatus === 1) {
-          setLocalUpvotes((prev) => prev + 1);
-          if (voteStatus === -1) {
-            setLocalDownvotes((prev) => prev - 1);
+          if (!upvotesHasNotation) {
+            const upvotesNum = parseVotes(localUpvotes) + 1;
+            setLocalUpvotes(formatVotes(upvotesNum));
+          }
+
+          if (voteStatus === -1 && !downvotesHasNotation) {
+            const downvotesNum = parseVotes(localDownvotes) - 1;
+            setLocalDownvotes(formatVotes(downvotesNum));
           }
         } else if (newVoteStatus === -1) {
-          setLocalDownvotes((prev) => prev + 1);
-          if (voteStatus === 1) {
-            setLocalUpvotes((prev) => prev - 1);
+          if (!downvotesHasNotation) {
+            const downvotesNum = parseVotes(localDownvotes) + 1;
+            setLocalDownvotes(formatVotes(downvotesNum));
+          }
+
+          if (voteStatus === 1 && !upvotesHasNotation) {
+            const upvotesNum = parseVotes(localUpvotes) - 1;
+            setLocalUpvotes(formatVotes(upvotesNum));
           }
         } else {
           // Removing vote
-          if (voteStatus === 1) {
-            setLocalUpvotes((prev) => prev - 1);
-          } else {
-            setLocalDownvotes((prev) => prev - 1);
+          if (voteStatus === 1 && !upvotesHasNotation) {
+            const upvotesNum = parseVotes(localUpvotes) - 1;
+            setLocalUpvotes(formatVotes(upvotesNum));
+          } else if (voteStatus === -1 && !downvotesHasNotation) {
+            const downvotesNum = parseVotes(localDownvotes) - 1;
+            setLocalDownvotes(formatVotes(downvotesNum));
           }
         }
         const message = `${direction === 1 ? "up" : "down"}voted to ${title}`;
@@ -84,8 +130,12 @@ export default function Card({ imageData }) {
 
   return (
     <div
-      id={id}
+      id={`scaleOptimizer-${id}`} // Added identifier for scale optimization
       className="relative h-[400px] flex justify-center items-center m-5 group hover:z-50 hover:scale-105 transition-transform duration-500 ease-in-out shadow-lg shadow-black/50"
+      style={{
+        width: `${Math.max(Math.round(parseFloat(aspect_ratio) * 400), 250)}px`,
+      }}
+      data-aspect-ratio={aspect_ratio}
     >
       <div className="flex flex-col justify-between absolute w-full bg-primary text-foreground h-[125%] rounded-lg transform scale-y-[0.75] transition-transform duration-500 ease group-hover:scale-y-[1] group-hover:-translate-y-3.5 z-10 p-1 shadow-lg shadow-black/50 opacity-0 group-hover:opacity-100 ">
         <div className="flex flex-col justify-start items-start m-0 p-0 h-fit space-y-2 ">

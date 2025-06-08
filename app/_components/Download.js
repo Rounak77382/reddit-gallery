@@ -75,7 +75,7 @@
 
 "use client";
 import { useAppContext } from "./Context";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Card from "./Card";
 import { ShimmerThumbnail } from "react-shimmer-effects";
 
@@ -83,7 +83,8 @@ export default function Download({ formData }) {
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [shimmerCount, setShimmerCount] = useState(0);
-  const { state } = useAppContext();
+  const { state, dispatch } = useAppContext();
+  const allImagesLoaded = useRef(false);
 
   useEffect(() => {
     if (formData?.postLimit) {
@@ -97,6 +98,7 @@ export default function Download({ formData }) {
       if (formData) {
         setImages([]);
         setIsLoading(true);
+        allImagesLoaded.current = false;
         try {
           const { searchTerm, postTime, postType, postLimit } = formData;
 
@@ -104,7 +106,9 @@ export default function Download({ formData }) {
 
           response = await fetch(
             `/api/downloader?subredditName=${searchTerm}&limit=${postLimit}&postType=${postType}&since=${postTime}${
-              state.isLoggedIn ? `&r=${state.accessToken}` : ""
+              state.isLoggedIn && state.accessToken
+                ? `&r=${state.accessToken}`
+                : ""
             }`
           );
 
@@ -126,6 +130,15 @@ export default function Download({ formData }) {
           console.warn("Error fetching images:", error);
         } finally {
           setIsLoading(false);
+          // Set a small delay to ensure all card components have rendered
+          setTimeout(() => {
+            allImagesLoaded.current = true;
+            // Dispatch an event to notify that all images have loaded
+            const event = new CustomEvent("allImagesLoaded", {
+              detail: { count: images.length },
+            });
+            window.dispatchEvent(event);
+          }, 500);
         }
       }
     }
@@ -193,6 +206,7 @@ export default function Download({ formData }) {
       },
     });
   }
+
   const ShimmerCards = () => (
     <>
       {console.log("No of shimmer cards:", shimmerCount)}

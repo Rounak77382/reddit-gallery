@@ -3,9 +3,19 @@
 import { useState, useRef, useEffect } from "react";
 import Scale from "./Scale";
 import Search from "./Search";
-import Options from "./Options";
+import dynamic from 'next/dynamic';
 import { AppProvider } from "./Context";
 import localFont from "next/font/local";
+
+// Dynamically import Options with SSR disabled
+const Options = dynamic(() => import('./Options'), { 
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center m-0 mx-[5px] animate-pulse">
+      <div className="w-[60px] h-[35px] bg-gray-600 rounded-[20px]"></div>
+    </div>
+  )
+});
 
 const VAG = localFont({
   src: [

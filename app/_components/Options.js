@@ -15,6 +15,12 @@ export default function Options() {
   const profilePictureRef = useRef("/icons/dp.png");
   const isUserAdultRef = useRef(false);
 
+  useEffect(() => {
+    if (state.isLoggedIn) {
+      isUserAdultRef.current = state.isAdult;
+    }
+  }, [state.isLoggedIn, state.isAdult]);
+
   const handleLogin = useCallback(() => {
     const width = window.innerWidth * 0.75;
     const height = window.innerHeight * 0.75;
@@ -44,20 +50,18 @@ export default function Options() {
         console.log("Received OAuth callback:", event.data);
 
         const { r, name, dp, isUserAdult } = event.data;
-        console.log("name : ", name);
-        console.log("dp : ", dp);
-        console.log("isUserAdult : ", isUserAdult);
         if (r) {
           console.log("Login successful:", r);
           dispatch({
             type: "LOGIN",
-            payload: r,
+            payload: {
+              accessToken: r,
+              username: name,
+              profilePicture: dp,
+              isAdult: isUserAdult,
+            },
           });
           if (authWindow) authWindow.close();
-
-          nameRef.current = name;
-          profilePictureRef.current = dp;
-          isUserAdultRef.current = Boolean(isUserAdult);
         }
       }
     };
@@ -93,13 +97,13 @@ export default function Options() {
     if (state.isNSFWAllowed) {
       dispatch({ type: "BLOCK_NSFW" });
     } else {
-      if (state.isLoggedIn && isUserAdultRef.current)
+      if (state.isLoggedIn && state.isAdult) {
         dispatch({ type: "ALLOW_NSFW" });
-      else if (!state.isLoggedIn) alert("Please login to view NSFW content");
-      else if (!isUserAdultRef.current)
-        alert(
-          'Turn on "Show mature content" in your Reddit settings to view NSFW content'
-        );
+      } else if (!state.isLoggedIn) {
+        alert("Please login to view NSFW content");
+      } else if (!state.isAdult) {
+        alert('Turn on "Show mature content" in your Reddit settings to view NSFW content');
+      }
     }
   };
 
@@ -133,7 +137,7 @@ export default function Options() {
           className="mx-[5px] w-[35px] h-[35px] rounded-full bg-gradient-to-b from-black to-[#7b7b7b] hover:cursor-pointer active:scale-90 transition-all duration-300 ease-in-out"
         >
           <img
-            src={profilePictureRef.current}
+            src={state.profilePicture || "/icons/dp.png"}
             alt="Profile"
             className="w-[33px] h-[33px] flex rounded-full border-none m-[1px]"
           />
@@ -142,14 +146,14 @@ export default function Options() {
         {showDropdown && (
           <div
             ref={dropdownRef}
-            className="absolute right-0 mt-2 !w-80  bg-[#1a282d] rounded-lg shadow-xl py-2 z-50 "
+            className="absolute right-0 mt-2 !w-80 bg-[#1a282d] rounded-lg shadow-xl py-2 z-50"
           >
             {state.isLoggedIn ? (
               <div className="px-4 py-3 border-b border-gray-700">
                 <div className="flex items-center space-x-3">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-b from-black to-[#7b7b7b] p-0.5">
                     <img
-                      src={profilePictureRef.current}
+                      src={state.profilePicture || "/icons/dp.png"}
                       className="w-full h-full rounded-full"
                       alt="Profile"
                     />
@@ -159,7 +163,7 @@ export default function Options() {
                       View Profile
                     </button>
                     <span className="text-gray-400 text-xs">
-                      u/{nameRef.current}
+                      u/{state.username || "User"}
                     </span>
                   </div>
                 </div>
