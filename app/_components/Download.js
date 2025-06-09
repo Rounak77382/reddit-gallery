@@ -1,12 +1,12 @@
 // // [app/_components/Download.js](app/_components/Download.js)
 // "use client";
-// import { useScale } from "./ScaleContext";
+// import { useAppContext } from "./Context";
 // import { useEffect, useState } from "react";
 // import Card from "./Card";
 
 // export default function Download({ formData }) {
 //   const [images, setImages] = useState([]);
-//   const { scaleValue } = useScale();
+//   const { state, dispatch } = useAppContext();
 
 //   useEffect(() => {
 //     async function fetchImages() {
@@ -55,7 +55,7 @@
 //         flexWrap: "wrap",
 //         width: "100%",
 //         padding: "1px",
-//         zoom: scaleValue,
+//         zoom: state.scaleValue,
 //       }}
 //     >
 //       {images.map((image, index) => (
@@ -85,11 +85,15 @@ export default function Download({ formData }) {
   const [shimmerCount, setShimmerCount] = useState(0);
   const { state, dispatch } = useAppContext();
   const allImagesLoaded = useRef(false);
+  // Track how many placeholders we need while loading
+  const [remainingPlaceholders, setRemainingPlaceholders] = useState(0);
 
   useEffect(() => {
     if (formData?.postLimit) {
       console.log("Updating shimmer count to:", formData.postLimit);
-      setShimmerCount(Number(formData.postLimit));
+      const limit = Number(formData.postLimit);
+      setShimmerCount(limit);
+      setRemainingPlaceholders(limit);
     }
   }, [formData]);
 
@@ -99,12 +103,12 @@ export default function Download({ formData }) {
         setImages([]);
         setIsLoading(true);
         allImagesLoaded.current = false;
+        
+        const { searchTerm, postTime, postType, postLimit } = formData;
+        setRemainingPlaceholders(Number(postLimit));
+
         try {
-          const { searchTerm, postTime, postType, postLimit } = formData;
-
-          let response;
-
-          response = await fetch(
+          const response = await fetch(
             `/api/downloader?subredditName=${searchTerm}&limit=${postLimit}&postType=${postType}&since=${postTime}${
               state.isLoggedIn && state.accessToken
                 ? `&r=${state.accessToken}`
@@ -116,24 +120,46 @@ export default function Download({ formData }) {
             throw new Error("ReadableStream not supported in this browser.");
           }
 
-          const reader = response.body
-            .pipeThrough(new TextDecoderStream())
-            .pipeThrough(parseNDJSON())
-            .getReader();
-
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          
           while (true) {
-            const { value: image, done } = await reader.read();
-            if (done) break;
-            setImages((prevImages) => [...prevImages, image]);
+            try {
+              const { value, done: doneReading } = await reader.read();
+              
+              if (doneReading) {
+                console.log("Stream reading done");
+                break;
+              }
+              
+              const chunk = decoder.decode(value, { stream: true });
+              
+              // Try to extract complete JSON objects from the chunk
+              const jsonObjects = extractJsonObjects(chunk);
+              
+              jsonObjects.forEach(jsonObj => {
+                try {
+                  const image = JSON.parse(jsonObj);
+                  setImages(prevImages => [...prevImages, image]);
+                  // Reduce remaining placeholders as we add real content
+                  setRemainingPlaceholders(prev => Math.max(0, prev - 1));
+                } catch (e) {
+                  console.warn("Failed to parse JSON:", jsonObj);
+                }
+              });
+            } catch (err) {
+              console.log("Error reading stream:", err);
+            }
           }
         } catch (error) {
           console.warn("Error fetching images:", error);
         } finally {
           setIsLoading(false);
-          // Set a small delay to ensure all card components have rendered
+          setRemainingPlaceholders(0);
+          
+          // Dispatch event when all images are loaded
           setTimeout(() => {
             allImagesLoaded.current = true;
-            // Dispatch an event to notify that all images have loaded
             const event = new CustomEvent("allImagesLoaded", {
               detail: { count: images.length },
             });
@@ -142,87 +168,36 @@ export default function Download({ formData }) {
         }
       }
     }
+    
     fetchImages();
   }, [formData, state.accessToken, state.isLoggedIn]);
 
-  function parseNDJSON() {
-    let ndjsonBuffer = "";
-
-    return new TransformStream({
-      transform(chunk, controller) {
-        try {
-          ndjsonBuffer += chunk;
-          const lines = ndjsonBuffer.split("\n");
-          ndjsonBuffer = lines.pop() || "";
-
-          for (const line of lines) {
-            if (line.trim()) {
-              try {
-                const parsedLine = JSON.parse(line);
-                controller.enqueue(parsedLine);
-              } catch (e) {
-                // Try to split potentially concatenated JSON objects
-                const jsonStrings = line.match(/\{[^}]+\}/g);
-                if (jsonStrings) {
-                  jsonStrings.forEach((jsonStr) => {
-                    try {
-                      const parsed = JSON.parse(jsonStr);
-                      controller.enqueue(parsed);
-                    } catch (err) {
-                      console.warn("Failed to parse JSON substring:", jsonStr);
-                    }
-                  });
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.warn("Transform error:", error);
+  // Helper function to extract complete JSON objects from a string
+  function extractJsonObjects(str) {
+    const results = [];
+    let depth = 0;
+    let startIndex = -1;
+    
+    for (let i = 0; i < str.length; i++) {
+      if (str[i] === '{') {
+        if (depth === 0) startIndex = i;
+        depth++;
+      } else if (str[i] === '}') {
+        depth--;
+        if (depth === 0 && startIndex !== -1) {
+          results.push(str.substring(startIndex, i + 1));
+          startIndex = -1;
         }
-      },
-
-      flush(controller) {
-        if (ndjsonBuffer.trim()) {
-          try {
-            // Try to split potentially concatenated JSON objects in final buffer
-            const jsonStrings = ndjsonBuffer.match(/\{[^}]+\}/g);
-            if (jsonStrings) {
-              jsonStrings.forEach((jsonStr) => {
-                try {
-                  const parsed = JSON.parse(jsonStr);
-                  controller.enqueue(parsed);
-                } catch (err) {
-                  console.warn(
-                    "Failed to parse JSON in final buffer:",
-                    jsonStr
-                  );
-                }
-              });
-            }
-          } catch (e) {
-            console.warn("Flush error:", e);
-          }
-        }
-      },
-    });
+      }
+    }
+    
+    return results;
   }
 
-  const ShimmerCards = () => (
-    <>
-      {console.log("No of shimmer cards:", shimmerCount)}
-      <div className="flex flex-wrap w-full p-0 m-0">
-        {Array(shimmerCount)
-          .fill(0)
-          .map((_, index) => (
-            <div
-              key={index}
-              className="relative w-[400px] h-[400px] m-5 opacity-5 shadow-lg shadow-black/50"
-            >
-              <ShimmerThumbnail height={400} rounded />
-            </div>
-          ))}
-      </div>
-    </>
+  const ShimmerCard = () => (
+    <div className="relative w-[400px] h-[400px] m-5 opacity-5 shadow-lg shadow-black/50">
+      <ShimmerThumbnail height={400} rounded />
+    </div>
   );
 
   return (
@@ -235,19 +210,24 @@ export default function Download({ formData }) {
         zoom: state.scaleValue,
       }}
     >
-      {isLoading ? (
-        <ShimmerCards />
-      ) : (
-        images.map((image, index) => (
-          <div
-            key={index}
-            style={{ position: "relative", width: "auto" }}
-            className=""
-          >
-            <Card imageData={image} />
-          </div>
-        ))
-      )}
+      {/* Real images that have already loaded */}
+      {images.map((image, index) => (
+        <div
+          key={`image-${index}`}
+          style={{ position: "relative", width: "auto" }}
+        >
+          <Card imageData={image} />
+        </div>
+      ))}
+      
+      {/* Placeholder shimmer cards for remaining items */}
+      {remainingPlaceholders > 0 && 
+        Array(remainingPlaceholders)
+          .fill(0)
+          .map((_, index) => (
+            <ShimmerCard key={`shimmer-${index}`} />
+          ))
+      }
     </div>
   );
 }
