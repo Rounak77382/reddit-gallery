@@ -130,7 +130,6 @@ export default function Card({ imageData }) {
 
   return (
     <div
-      id={`scaleOptimizer-${id}`} // Added identifier for scale optimization
       className="relative h-[400px] flex justify-center items-center m-5 group hover:z-50 hover:scale-105 transition-transform duration-500 ease-in-out shadow-lg shadow-black/50"
       style={{
         width: `${Math.max(Math.round(parseFloat(aspect_ratio) * 400), 250)}px`,

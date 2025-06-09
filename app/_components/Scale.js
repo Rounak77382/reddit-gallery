@@ -10,6 +10,8 @@ export default function Scale() {
   const [isSnapEnabled, setIsSnapEnabled] = useState(false);
   const previousSearchRef = useRef(null);
   const searchSubmittedRef = useRef(false);
+  const calculateTimeoutRef = useRef(null);
+  const autoModeActivatedRef = useRef(false); // Track if auto mode has been activated
 
   // Listen for search events from the Search component
   useEffect(() => {
@@ -26,6 +28,7 @@ export default function Scale() {
       // Clear optimal scales and mark for recalculation
       setOptimalScales([]);
       searchSubmittedRef.current = true;
+      autoModeActivatedRef.current = false; // Reset auto mode flag for new search
     };
 
     window.addEventListener("searchSubmitted", handleSearchSubmit);
@@ -45,6 +48,7 @@ export default function Scale() {
       // Turn off auto mode
       setIsSnapEnabled(false);
       setShowOptimalScales(false);
+      autoModeActivatedRef.current = false; // Reset auto mode flag
 
       // Update the previous search ref
       previousSearchRef.current = state.searchQuery;
@@ -63,65 +67,143 @@ export default function Scale() {
       // Turn off auto mode
       setIsSnapEnabled(false);
       setShowOptimalScales(false);
+      autoModeActivatedRef.current = false; // Reset auto mode flag
 
       // Update the previous search ref
       previousSearchRef.current = state.posts.length;
     }
   }, [state.posts, dispatch]);
 
+  // Automatically enable snap mode when optimal scales are available
+    useEffect(() => {
+    if (optimalScales.length > 0 && !autoModeActivatedRef.current) {
+      console.log("Auto-enabling snap mode with optimal scales:", optimalScales);
+      setIsSnapEnabled(true);
+      setShowOptimalScales(true);
+      autoModeActivatedRef.current = true;
+  
+      // Apply the scale closest to 1.0 but less than or equal to 1.0
+      if (optimalScales.length > 0) {
+        // Filter scales that are less than or equal to 1.0
+        const scalesLessThanOne = optimalScales.filter(scale => scale <= 1.0);
+        
+        // If we have scales <= 1.0, choose the largest (closest to 1.0)
+        // Otherwise, pick the smallest scale (closest to 1.0 from above)
+        const scaleClosestToOne = scalesLessThanOne.length > 0
+          ? Math.max(...scalesLessThanOne)
+          : Math.min(...optimalScales);
+        
+        console.log("Applying scale closest to 1.0 but ≤ 1.0:", scaleClosestToOne);
+  
+        dispatch({
+          type: "SET_SCALE",
+          payload: scaleClosestToOne.toFixed(3),
+        });
+      }
+    }
+  }, [optimalScales, dispatch]);
+
+  // Add a new effect to listen for the imagesLoaded event
   useEffect(() => {
-    // Find all cards and calculate their widths
-    const calculateOptimalScales = () => {
-      // Your existing calculation code
-      const cards = document.querySelectorAll('[id^="scaleOptimizer"]');
-      if (cards.length === 0) return;
-
-      // Extract the actual widths of all cards based on aspect ratio
-      const cardWidths = Array.from(cards)
-        .map((card) => {
-          // Get the card ID to extract the image data
-          const cardId = card.id.split("-")[1];
-
-          // Try to find the aspect ratio data attribute or compute it from the image
-          const mediaElement = card.querySelector("[data-aspect-ratio]");
-          if (mediaElement) {
-            const aspectRatio = parseFloat(mediaElement.dataset.aspectRatio);
-            // Calculate width based on a fixed height (400px) and the aspect ratio
-            return Math.max(aspectRatio * 400, 250); // Min width of 250px
-          }
-
-          // Fallback to measuring the actual rendered element
-          const renderedMedia = card.querySelector('div[class*="rounded-lg"]');
-          return renderedMedia ? renderedMedia.offsetWidth : 250;
-        })
-        .filter((width) => width > 0);
-
-      if (cardWidths.length === 0) return;
-
-      // Calculate the screen width
-      const screenWidth = window.innerWidth;
-
-      console.log("cardWidths: ", cardWidths);
-      console.log("screenWidth: ", screenWidth);
-
-      // Calculate optimal scales
-      const scales = minimumgap(cardWidths, screenWidth, 20, 20);
-      if (scales.length > 0) {
-        setOptimalScales(scales);
+    const handleImagesLoaded = (event) => {
+      console.log("Scale.js: Received imagesLoaded event", event.detail);
+      
+      // Clear any existing timeout
+      if (calculateTimeoutRef.current) {
+        clearTimeout(calculateTimeoutRef.current);
+      }
+      
+      // Set a timeout to calculate optimal scales after a short delay
+      calculateTimeoutRef.current = setTimeout(() => {
+        calculateOptimalScales();
+      }, 500);
+    };
+    
+    // Listen for both event types that Download.js dispatches
+    window.addEventListener("imagesLoaded", handleImagesLoaded);
+    window.addEventListener("imagesComplete", calculateOptimalScales);
+    
+    return () => {
+      window.removeEventListener("imagesLoaded", handleImagesLoaded);
+      window.removeEventListener("imagesComplete", calculateOptimalScales);
+      if (calculateTimeoutRef.current) {
+        clearTimeout(calculateTimeoutRef.current);
       }
     };
+  }, []);
 
+  // Find all cards and calculate their widths
+  const calculateOptimalScales = () => {
+    console.log("Calculating optimal scales");
+    // Your existing calculation code
+    const cards = document.querySelectorAll('[id^="scaleOptimizer"]');
+    if (cards.length === 0) {
+      console.log("No cards found");
+      return;
+    }
+
+    // Extract the actual widths of all cards based on aspect ratio
+    const cardWidths = Array.from(cards)
+      .map((card) => {
+        // Get the card ID to extract the image data
+        const cardId = card.id.split("-")[1];
+
+        // Try to find the aspect ratio data attribute or compute it from the image
+        const mediaElement = card.querySelector("[data-aspect-ratio]");
+        if (mediaElement) {
+          const aspectRatio = parseFloat(mediaElement.dataset.aspectRatio);
+          // Calculate width based on a fixed height (400px) and the aspect ratio
+          return Math.max(aspectRatio * 400, 250); // Min width of 250px
+        }
+
+        // Fallback to measuring the actual rendered element
+        const renderedMedia = card.querySelector('div[class*="rounded-lg"]');
+        return renderedMedia ? renderedMedia.offsetWidth : 250;
+      })
+      .filter((width) => width > 0);
+
+    if (cardWidths.length === 0) {
+      console.log("No valid card widths found");
+      return;
+    }
+
+    // Calculate the screen width
+    const screenWidth = window.innerWidth;
+
+    console.log("cardWidths: ", cardWidths);
+    console.log("screenWidth: ", screenWidth);
+
+    // Calculate optimal scales
+    const scales = minimumgap(cardWidths, screenWidth, 20, 20);
+    if (scales.length > 0) {
+      console.log("Found optimal scales:", scales);
+      setOptimalScales(scales);
+      // Auto mode will be activated by the useEffect that watches optimalScales
+    } else {
+      console.log("No optimal scales found");
+    }
+  };
+
+  useEffect(() => {
     // Create a mutation observer to watch for new cards
     const observer = new MutationObserver((mutations) => {
       // Check if all images have loaded
       const allCards = document.querySelectorAll('[id^="scaleOptimizer"]');
+      if (allCards.length === 0) return;
+      
       const allLoaded = Array.from(allCards).every(
-        (card) => !card.querySelector(".animate-pulse")
+        (card) => card.getAttribute("data-loaded") === "true"
       );
 
       if (allLoaded && allCards.length > 0) {
-        calculateOptimalScales();
-        observer.disconnect();
+        console.log("Mutation observer: All cards are loaded");
+        // Set a timeout to ensure all DOM updates are complete
+        if (calculateTimeoutRef.current) {
+          clearTimeout(calculateTimeoutRef.current);
+        }
+        calculateTimeoutRef.current = setTimeout(() => {
+          calculateOptimalScales();
+        }, 500);
       }
     });
 
@@ -133,17 +215,23 @@ export default function Scale() {
 
     // If a search was submitted, we need to recalculate the optimal scales
     if (searchSubmittedRef.current) {
-      setTimeout(() => {
+      if (calculateTimeoutRef.current) {
+        clearTimeout(calculateTimeoutRef.current);
+      }
+      calculateTimeoutRef.current = setTimeout(() => {
         calculateOptimalScales();
         searchSubmittedRef.current = false;
-      }, 1000); // Wait for new content to load
+      }, 1500); // Wait for new content to load
     }
 
     return () => {
       observer.disconnect();
       window.removeEventListener("resize", calculateOptimalScales);
+      if (calculateTimeoutRef.current) {
+        clearTimeout(calculateTimeoutRef.current);
+      }
     };
-  }, [optimalScales.length === 0]); // Recalculate when optimalScales are cleared
+  }, []); // Run only once
 
   const handleScaleChange = (e) => {
     const currentValue = parseFloat(e.target.value);
@@ -181,25 +269,16 @@ export default function Scale() {
 
     // When enabling snap mode, immediately snap to the closest optimal scale
     if (newSnapState && optimalScales.length > 0) {
-      const currentValue = parseFloat(state.scaleValue);
-      const closestScale = optimalScales.reduce((prev, curr) =>
-        Math.abs(curr - currentValue) < Math.abs(prev - currentValue)
-          ? curr
-          : prev
+      // Find the scale closest to 1.0
+      const scaleClosestToOne = optimalScales.reduce((prev, curr) =>
+        Math.abs(curr - 1.0) < Math.abs(prev - 1.0) ? curr : prev
       );
 
       dispatch({
         type: "SET_SCALE",
-        payload: closestScale.toFixed(3),
+        payload: scaleClosestToOne.toFixed(3),
       });
     }
-  };
-
-  const applyOptimalScale = (scale) => {
-    dispatch({
-      type: "SET_SCALE",
-      payload: scale.toFixed(3),
-    });
   };
 
   return (
@@ -247,40 +326,23 @@ export default function Scale() {
         <span className="mx-2.5 text-foreground text-[15px] w-[40px] text-center">
           {parseFloat(state.scaleValue).toFixed(3)}
         </span>
-
-        {optimalScales.length > 0 && (
-          <button
-            onClick={toggleSnapMode}
-            className={`ml-2 ${
-              isSnapEnabled ? "bg-[#ff4400]" : "bg-gray-600"
-            } text-white px-2 py-1 rounded-full text-xs hover:bg-[#ff440073] transition-colors`}
-            title={
-              isSnapEnabled
-                ? "Disable snap to optimal scales"
-                : "Enable snap to optimal scales"
-            }
-          >
-            Auto
-          </button>
-        )}
+        <button
+          onClick={toggleSnapMode}
+          className={`ml-2 ${
+            isSnapEnabled && optimalScales.length > 0
+              ? "bg-[#ff4400]"
+              : "bg-gray-600"
+          } text-white px-2 py-1 rounded-full text-xs hover:bg-[#ff440073] transition-colors`}
+          title={
+            isSnapEnabled && optimalScales.length > 0
+              ? "Disable snap to optimal scales"
+              : "Enable snap to optimal scales"
+          }
+          disabled={optimalScales.length === 0}
+        >
+          Auto
+        </button>
       </div>
-
-      {/* {showOptimalScales && optimalScales.length > 0 && (
-        <div className="absolute top-full mt-2 right-0 bg-primary p-2 rounded-md shadow-lg z-50">
-          <p className="text-sm text-foreground mb-2">Optimal scales:</p>
-          <div className="flex flex-wrap gap-2">
-            {optimalScales.map((scale, index) => (
-              <button
-                key={index}
-                onClick={() => applyOptimalScale(scale)}
-                className="bg-[#ff4400] text-white px-2 py-1 rounded-md text-xs hover:bg-[#ff440073] transition-colors"
-              >
-                {scale.toFixed(3)}
-              </button>
-            ))}
-          </div>
-        </div>
-      )} */}
 
       <style jsx>{`
         #scaleSlider::-webkit-slider-thumb {
