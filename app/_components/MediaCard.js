@@ -3,7 +3,7 @@
 import React from "react";
 import Media from "./Media";
 import { useState } from "react";
-import { useAppContext } from "./Context";
+import { useAppContext } from "./AppContext";
 
 // Helper function to convert vote string (like "10K", "1.5M") to number
 const parseVotes = (voteStr) => {

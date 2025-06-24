@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useAppContext } from "./Context";
+import { useAppContext } from "./AppContext";
 
 export default function Options() {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -102,7 +102,9 @@ export default function Options() {
       } else if (!state.isLoggedIn) {
         alert("Please login to view NSFW content");
       } else if (!state.isAdult) {
-        alert('Turn on "Show mature content" in your Reddit settings to view NSFW content');
+        alert(
+          'Turn on "Show mature content" in your Reddit settings to view NSFW content'
+        );
       }
     }
   };

@@ -1,6 +1,6 @@
 // app/api/subreddits/route.js
 import { NextResponse } from 'next/server';
-import { listSubreddits } from '@/app/_lib/list_subreddits';
+import { listSubreddits } from '@/app/_lib/SubredditSearchService';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);

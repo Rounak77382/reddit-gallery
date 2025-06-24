@@ -1,6 +1,6 @@
 import snoowrap from "snoowrap";
 import qs from "qs";
-import { getGif } from "../_components/Red";
+import { getGif } from "../_components/RedGifsClient";
 import { marked } from "marked";
 import dotenv from "dotenv";
 dotenv.config({ path: ".env" });

@@ -1,6 +1,6 @@
 // app/api/downloader/route.js
 import { NextResponse } from "next/server";
-import { downloadImages } from "@/app/_lib/downloader";
+import { downloadImages } from "@/app/_lib/RedditMediaFetcher";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);

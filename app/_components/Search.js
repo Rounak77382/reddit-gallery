@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import searchIcon from "../../public/icons/search.svg";
 import Image from "next/image";
-import Download from "./Download";
-import { useAppContext } from "./Context";
+import Download from "./GalleryContent";
+import { useAppContext } from "./AppContext";
 
 export default function Search() {
   const { dispatch } = useAppContext();
@@ -33,21 +33,21 @@ export default function Search() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Reset the scale to 1.0
     dispatch({ type: "RESET_SCALE" });
-    
+
     // Dispatch a custom event to notify Scale component
     const searchEvent = new Event("searchSubmitted");
     window.dispatchEvent(searchEvent);
-    
+
     const data = {
       searchTerm,
       postTime,
       postType,
       postLimit,
     };
-    
+
     if (JSON.stringify(data) !== JSON.stringify(formData)) {
       setFormData(data);
       console.log("handleSubmit Form Data:", data);

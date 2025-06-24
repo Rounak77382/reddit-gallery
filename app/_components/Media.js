@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Carousel from "./Carousel";
-import SimpleImage from "./SimpleImage";
+import SimpleImage from "./StaticImage";
 import Video from "./Video";
 import LinkPreview from "./LinkPreview";
 import TextContent from "./TextContent";

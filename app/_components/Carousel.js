@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAppContext } from "./Context";
+import { useAppContext } from "./AppContext";
 
 export default function Carousel({ imageData }) {
   const [maxWidth, setMaxWidth] = useState(250);
@@ -36,7 +36,10 @@ export default function Carousel({ imageData }) {
   };
 
   const prevImage = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + imageData.url.length) % imageData.url.length);
+    setCurrentIndex(
+      (prevIndex) =>
+        (prevIndex - 1 + imageData.url.length) % imageData.url.length
+    );
   };
 
   return (
@@ -58,7 +61,7 @@ export default function Carousel({ imageData }) {
           className={`
             w-auto h-full object-cover rounded-lg 
             transition-all duration-500 ease-in-out
-            ${imageData.isNSFW && !isNSFWAllowed ? 'blur-xl' : ''}
+            ${imageData.isNSFW && !isNSFWAllowed ? "blur-xl" : ""}
           `}
           onError={(e) => {
             e.target.onerror = null;

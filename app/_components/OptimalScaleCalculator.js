@@ -1,7 +1,7 @@
 "use client";
-import { useAppContext } from "./Context";
+import { useAppContext } from "./AppContext";
 import { useEffect, useState, useRef } from "react";
-import { minimumgap } from "../_lib/scale";
+import { minimumgap } from "../_lib/OptimalLayoutCalculator";
 
 export default function Scale() {
   const { state, dispatch } = useAppContext();
@@ -75,26 +75,33 @@ export default function Scale() {
   }, [state.posts, dispatch]);
 
   // Automatically enable snap mode when optimal scales are available
-    useEffect(() => {
+  useEffect(() => {
     if (optimalScales.length > 0 && !autoModeActivatedRef.current) {
-      console.log("Auto-enabling snap mode with optimal scales:", optimalScales);
+      console.log(
+        "Auto-enabling snap mode with optimal scales:",
+        optimalScales
+      );
       setIsSnapEnabled(true);
       setShowOptimalScales(true);
       autoModeActivatedRef.current = true;
-  
+
       // Apply the scale closest to 1.0 but less than or equal to 1.0
       if (optimalScales.length > 0) {
         // Filter scales that are less than or equal to 1.0
-        const scalesLessThanOne = optimalScales.filter(scale => scale <= 1.0);
-        
+        const scalesLessThanOne = optimalScales.filter((scale) => scale <= 1.0);
+
         // If we have scales <= 1.0, choose the largest (closest to 1.0)
         // Otherwise, pick the smallest scale (closest to 1.0 from above)
-        const scaleClosestToOne = scalesLessThanOne.length > 0
-          ? Math.max(...scalesLessThanOne)
-          : Math.min(...optimalScales);
-        
-        console.log("Applying scale closest to 1.0 but ≤ 1.0:", scaleClosestToOne);
-  
+        const scaleClosestToOne =
+          scalesLessThanOne.length > 0
+            ? Math.max(...scalesLessThanOne)
+            : Math.min(...optimalScales);
+
+        console.log(
+          "Applying scale closest to 1.0 but ≤ 1.0:",
+          scaleClosestToOne
+        );
+
         dispatch({
           type: "SET_SCALE",
           payload: scaleClosestToOne.toFixed(3),
@@ -107,22 +114,22 @@ export default function Scale() {
   useEffect(() => {
     const handleImagesLoaded = (event) => {
       console.log("Scale.js: Received imagesLoaded event", event.detail);
-      
+
       // Clear any existing timeout
       if (calculateTimeoutRef.current) {
         clearTimeout(calculateTimeoutRef.current);
       }
-      
+
       // Set a timeout to calculate optimal scales after a short delay
       calculateTimeoutRef.current = setTimeout(() => {
         calculateOptimalScales();
       }, 500);
     };
-    
+
     // Listen for both event types that Download.js dispatches
     window.addEventListener("imagesLoaded", handleImagesLoaded);
     window.addEventListener("imagesComplete", calculateOptimalScales);
-    
+
     return () => {
       window.removeEventListener("imagesLoaded", handleImagesLoaded);
       window.removeEventListener("imagesComplete", calculateOptimalScales);
@@ -190,7 +197,7 @@ export default function Scale() {
       // Check if all images have loaded
       const allCards = document.querySelectorAll('[id^="scaleOptimizer"]');
       if (allCards.length === 0) return;
-      
+
       const allLoaded = Array.from(allCards).every(
         (card) => card.getAttribute("data-loaded") === "true"
       );

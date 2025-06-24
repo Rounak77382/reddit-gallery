@@ -1,4 +1,4 @@
-import { useAppContext } from "./Context";
+import { useAppContext } from "./AppContext";
 
 export default function SimpleImage({ imageData }) {
   const { state } = useAppContext();

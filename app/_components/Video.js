@@ -1,4 +1,4 @@
-import { useAppContext } from "./Context";
+import { useAppContext } from "./AppContext";
 import { useEffect, useRef, useState, memo } from "react";
 import Hls from "hls.js";
 

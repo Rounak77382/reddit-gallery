@@ -1,7 +1,7 @@
 "use client";
-import { useAppContext } from "./Context";
+import { useAppContext } from "./AppContext";
 import { useEffect, useState, useRef } from "react";
-import Card from "./Card";
+import Card from "./MediaCard";
 import { ShimmerThumbnail } from "react-shimmer-effects";
 
 export default function Download({ formData }) {
@@ -23,7 +23,7 @@ export default function Download({ formData }) {
       imagesLoadedTriggered.current = false;
     }
   }, [formData]);
-  
+
   useEffect(() => {
     async function fetchImages() {
       if (formData) {
@@ -114,28 +114,39 @@ export default function Download({ formData }) {
 
   // Use an effect to trigger scale calculation when all images are loaded
   useEffect(() => {
-    if (images.length > 0 && !isLoading && remainingPlaceholders === 0 && !imagesLoadedTriggered.current) {
+    if (
+      images.length > 0 &&
+      !isLoading &&
+      remainingPlaceholders === 0 &&
+      !imagesLoadedTriggered.current
+    ) {
       console.log("All images loaded, triggering scale calculation");
-      
+
       // Mark that we've triggered the images loaded event
       imagesLoadedTriggered.current = true;
-      
+
       // Add a delay to ensure all images are fully rendered
       const timer = setTimeout(() => {
         // Dispatch the event for Scale.js to listen to
-        window.dispatchEvent(new CustomEvent('imagesLoaded', { 
-          detail: { 
-            count: images.length,
-            timestamp: Date.now() 
-          } 
-        }));
-        
+        window.dispatchEvent(
+          new CustomEvent("imagesLoaded", {
+            detail: {
+              count: images.length,
+              timestamp: Date.now(),
+            },
+          })
+        );
+
         // Also dispatch a different event type to try to catch any issues
-        window.dispatchEvent(new Event('imagesComplete'));
-        
-        console.log("Dispatched imagesLoaded event with", images.length, "images");
+        window.dispatchEvent(new Event("imagesComplete"));
+
+        console.log(
+          "Dispatched imagesLoaded event with",
+          images.length,
+          "images"
+        );
       }, 1000); // Increased delay to ensure images are fully rendered
-      
+
       return () => clearTimeout(timer);
     }
   }, [images.length, isLoading, remainingPlaceholders]);
