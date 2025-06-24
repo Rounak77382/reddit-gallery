@@ -133,11 +133,11 @@ export default function Card({ imageData }) {
       className="relative h-[400px] flex justify-center items-center m-5 group hover:z-50 hover:scale-105 transition-transform duration-500 ease-in-out shadow-lg shadow-black/50"
       style={{
         width: `${Math.max(
-          Math.round(Math.min(parseFloat(aspect_ratio || 1), 1.5) * 400),
+          Math.round(Math.min(parseFloat(aspect_ratio || 1), 2) * 400),
           250
         )}px`,
       }}
-      data-aspect-ratio={Math.min(parseFloat(aspect_ratio || 1), 1.5)}
+      data-aspect-ratio={Math.min(parseFloat(aspect_ratio || 1), 2)}
     >
       <div className="flex flex-col justify-between absolute w-full bg-primary text-foreground h-[125%] rounded-lg transform scale-y-[0.75] transition-transform duration-500 ease group-hover:scale-y-[1] group-hover:-translate-y-3.5 z-10 p-1 shadow-lg shadow-black/50 opacity-0 group-hover:opacity-100 ">
         <div className="flex flex-col justify-start items-start m-0 p-0 h-fit space-y-2 ">
