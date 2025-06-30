@@ -61,7 +61,6 @@ const decryptData = (encryptedData) => {
   }
 };
 
-// Initialize state from cookies if available
 const getInitialState = () => {
   // Check if we're in the browser environment
   if (typeof window !== "undefined") {
@@ -79,7 +78,27 @@ const getInitialState = () => {
             username: parsedState.username || null,
             profilePicture: parsedState.profilePicture || null,
             isAdult: parsedState.isAdult || false,
+            searchHistory: parsedState.searchHistory || [], // Add search history
           };
+        }
+      }
+
+      // Try to load history from localStorage if not in cookies
+      const savedHistory = localStorage.getItem("redditGalleryHistory");
+      if (savedHistory) {
+        try {
+          return {
+            scaleValue: 1.0,
+            isLoggedIn: false,
+            isNSFWAllowed: false,
+            accessToken: null,
+            username: null,
+            profilePicture: null,
+            isAdult: false,
+            searchHistory: JSON.parse(savedHistory), // Load from localStorage
+          };
+        } catch (e) {
+          console.error("Failed to parse history from localStorage:", e);
         }
       }
     } catch (error) {
@@ -95,9 +114,11 @@ const getInitialState = () => {
     username: null,
     profilePicture: null,
     isAdult: false,
+    searchHistory: [], // Initialize empty history
   };
 };
 
+// Add history actions to the reducer
 function appReducer(state, action) {
   switch (action.type) {
     case "SET_SCALE":
@@ -130,6 +151,48 @@ function appReducer(state, action) {
       return { ...state, isNSFWAllowed: true };
     case "BLOCK_NSFW":
       return { ...state, isNSFWAllowed: false };
+    case "ADD_TO_HISTORY": {
+      // Create a unique ID for this search configuration
+      const searchId = `${action.payload.name}_${action.payload.postType}_${action.payload.postTime}`;
+
+      // Add ID to the payload
+      const historyEntry = {
+        ...action.payload,
+        id: searchId,
+        timestamp: Date.now(),
+      };
+
+      // Check if this exact configuration is already in history
+      const existingIndex = state.searchHistory.findIndex(
+        (item) => item.id === searchId
+      );
+
+      let newHistory;
+      if (existingIndex >= 0) {
+        // Update existing entry with new timestamp
+        newHistory = [...state.searchHistory];
+        newHistory[existingIndex] = {
+          ...newHistory[existingIndex],
+          timestamp: Date.now(),
+        };
+      } else {
+        // Add to beginning of history
+        newHistory = [historyEntry, ...state.searchHistory];
+      }
+
+      // Limit to 20 items
+      newHistory = newHistory.slice(0, 20);
+
+      // Also update localStorage for backwards compatibility
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "redditGalleryHistory",
+          JSON.stringify(newHistory)
+        );
+      }
+
+      return { ...state, searchHistory: newHistory };
+    }
     default:
       return state;
   }
@@ -175,7 +238,7 @@ export function AppProvider({ children }) {
         console.error("Error saving encrypted cookie:", error);
       }
       console.log("Current state:", state);
-      console.log("Cookie value:", Cookies.get("redditGalleryState"));
+      // console.log("Cookie value:", Cookies.get("redditGalleryState"));
     }
   }, [state]);
 

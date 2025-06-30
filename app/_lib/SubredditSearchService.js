@@ -67,5 +67,6 @@ export async function listSubreddits(subredditName) {
     { query: subredditName },
     { includeNsfw: true }
   );
+  // console.log(subredditResults)
   return subredditResults;
 }

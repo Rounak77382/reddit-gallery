@@ -8,7 +8,7 @@ import Download from "./GalleryContent";
 import { useAppContext } from "./AppContext";
 
 export default function Search() {
-  const { dispatch } = useAppContext();
+  const { state, dispatch } = useAppContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [subreddits, setSubreddits] = useState([]);
   const [postTime, setPostTime] = useState("day");
@@ -48,11 +48,54 @@ export default function Search() {
       postLimit,
     };
 
+    if (searchTerm) {
+      // Add to search history using the context
+      dispatch({
+        type: "ADD_TO_HISTORY",
+        payload: {
+          name: searchTerm,
+          postTime: postTime,
+          postType: postType,
+          postLimit: postLimit,
+        }
+      });
+    }
+
     if (JSON.stringify(data) !== JSON.stringify(formData)) {
       setFormData(data);
       console.log("handleSubmit Form Data:", data);
     }
   };
+
+  useEffect(() => {
+    // Listen for sidebar subreddit selections
+    const handleSidebarSelection = (event) => {
+      const { subredditName, postTime, postType, postLimit, skipAutoSubmit } = event.detail;
+      
+      // Set all search parameters
+      setSearchTerm(subredditName);
+      
+      // Only update these if they were provided in the event
+      if (postTime) setPostTime(postTime);
+      if (postType) setPostType(postType);
+      if (postLimit) setPostLimit(postLimit);
+      
+      // Only auto-submit if not explicitly skipped
+      if (!skipAutoSubmit) {
+        // Auto-submit the form
+        const submitButton = document.getElementById('formbutton');
+        if (submitButton) {
+          submitButton.click();
+        }
+      }
+    };
+  
+    window.addEventListener('sidebarSubredditSelected', handleSidebarSelection);
+    
+    return () => {
+      window.removeEventListener('sidebarSubredditSelected', handleSidebarSelection);
+    };
+  }, []);
 
   return (
     <>

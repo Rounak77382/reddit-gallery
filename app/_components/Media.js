@@ -9,7 +9,6 @@ import TextContent from "./TextContent";
 import { marked } from "marked";
 
 export default function Media({ imageData }) {
-  console.log("imageData: ", imageData);
   const [parsedContent, setParsedContent] = useState("");
   const imageFormats = [".jpg", ".jpeg", ".png", ".gif"];
   const urlWithoutParams =
