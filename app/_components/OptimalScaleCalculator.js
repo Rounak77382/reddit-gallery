@@ -289,10 +289,10 @@ export default function Scale() {
   };
 
   return (
-    <div className="flex items-center relative">
+    <div className="flex items-center relative h-10">
       <div
         id="scaleControl"
-        className="flex items-center justify-between p-3 bg-primary rounded-full"
+        className="flex items-center justify-between p-3 py-2 bg-primary rounded-full h-10"
       >
         <label
           htmlFor="scaleSlider"

@@ -1,4 +1,3 @@
-// app/api/subreddits/route.js
 import { NextResponse } from 'next/server';
 import { listSubreddits } from '@/app/_lib/SubredditSearchService';
 
@@ -14,6 +13,7 @@ export async function GET(request) {
     const results = await listSubreddits(subredditName);
     return NextResponse.json(results, { status: 200 });
   } catch (error) {
+    console.error("Error fetching subreddits:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

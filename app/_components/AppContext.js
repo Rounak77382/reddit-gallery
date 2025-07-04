@@ -153,7 +153,11 @@ function appReducer(state, action) {
       return { ...state, isNSFWAllowed: false };
     case "ADD_TO_HISTORY": {
       // Create a unique ID for this search configuration
-      const searchId = `${action.payload.name}_${action.payload.postType}_${action.payload.postTime}`;
+      // Only include postTime in the ID if the postType is 'top'
+      const searchId =
+        action.payload.postType === "top"
+          ? `${action.payload.name}_${action.payload.postType}_${action.payload.postTime}`
+          : `${action.payload.name}_${action.payload.postType}`;
 
       // Add ID to the payload
       const historyEntry = {
@@ -181,7 +185,7 @@ function appReducer(state, action) {
       }
 
       // Limit to 20 items
-      newHistory = newHistory.slice(0, 20);
+      newHistory = newHistory.slice(0, 14);
 
       // Also update localStorage for backwards compatibility
       if (typeof window !== "undefined") {
@@ -192,6 +196,9 @@ function appReducer(state, action) {
       }
 
       return { ...state, searchHistory: newHistory };
+    }
+    case "LOAD_HISTORY": {
+      return { ...state, searchHistory: action.payload };
     }
     default:
       return state;
@@ -241,6 +248,21 @@ export function AppProvider({ children }) {
       // console.log("Cookie value:", Cookies.get("redditGalleryState"));
     }
   }, [state]);
+
+  // Load search history from localStorage on initial render
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedHistory = localStorage.getItem("redditGalleryHistory");
+      if (savedHistory) {
+        try {
+          const parsedHistory = JSON.parse(savedHistory);
+          dispatch({ type: "LOAD_HISTORY", payload: parsedHistory });
+        } catch (e) {
+          console.error("Error parsing search history:", e);
+        }
+      }
+    }
+  }, []);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>

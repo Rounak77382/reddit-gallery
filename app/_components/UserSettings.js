@@ -111,7 +111,7 @@ export default function Options() {
 
   return (
     <>
-      <div className="flex justify-center w-[60px] p-2 mx-[2px] rounded-[20px] bg-[#1a282d] text-white hover:bg-[#472323] active:scale-90 transition-all duration-300 ease-in-out">
+      <div className="flex justify-center w-[60px] p-2 mx-[2px] rounded-[20px] bg-[#1a282d] text-white hover:bg-[#472323] active:scale-90 transition-all duration-300 ease-in-out h-10">
         <button
           onClick={handleNSFWToggle}
           className={`bg-transparent border-none font-medium cursor-pointer text-[15px] ${
@@ -123,7 +123,7 @@ export default function Options() {
       </div>
 
       {!state.isLoggedIn && (
-        <div className="flex justify-center w-[60px] p-2 mx-[5px] rounded-[20px] bg-[#ff4400e7] text-white hover:bg-[#ff440073] active:scale-90 transition-all duration-300 ease-in-out">
+        <div className="flex justify-center w-[60px] p-2 mx-[5px] rounded-[20px] bg-[#ff4400e7] text-white hover:bg-[#ff440073] active:scale-90 transition-all duration-300 ease-in-out h-10">
           <button
             className="text-white bg-transparent border-none font-medium cursor-pointer text-[15px]"
             onClick={handleLogin}
@@ -133,15 +133,15 @@ export default function Options() {
         </div>
       )}
 
-      <div className="relative">
+      <div className="relative h-10">
         <div
           onClick={() => setShowDropdown(!showDropdown)}
-          className="mx-[5px] w-[35px] h-[35px] rounded-full bg-gradient-to-b from-black to-[#7b7b7b] hover:cursor-pointer active:scale-90 transition-all duration-300 ease-in-out"
+          className="mx-[5px] w-[36px] h-[36px] rounded-full bg-gradient-to-b from-black to-[#7b7b7b] hover:cursor-pointer active:scale-90 transition-all duration-300 ease-in-out"
         >
           <img
             src={state.profilePicture || "/icons/dp.png"}
             alt="Profile"
-            className="w-[33px] h-[33px] flex rounded-full border-none m-[1px]"
+            className="w-[36px] h-[36px] rounded-full border-none m-[1px]"
           />
         </div>
 

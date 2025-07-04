@@ -64,6 +64,10 @@ export default function Sidebar() {
     window.dispatchEvent(searchEvent);
   };
 
+  const sortedHistory = [...state.searchHistory].sort(
+    (a, b) => b.timestamp - a.timestamp
+  );
+
   return (
     <div
       className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${
@@ -104,11 +108,11 @@ export default function Sidebar() {
                 <h3 className="text-foreground text-xs uppercase font-semibold mb-2 px-2">
                   Recently Visited
                 </h3>
-                {state.searchHistory.length === 0 ? (
+                {sortedHistory.length === 0 ? (
                   <p className="text-gray-500 text-sm px-2">No history yet</p>
                 ) : (
                   <ul>
-                    {state.searchHistory.map((item, index) => (
+                    {sortedHistory.map((item, index) => (
                       <li key={item.id || index} className="mb-1">
                         <button
                           onClick={() => handleSelectSubreddit(item)}
@@ -119,7 +123,10 @@ export default function Sidebar() {
                               r/{item.name}
                             </span>
                             <span className="text-xs text-gray-400">
-                              {item.postType}/{item.postTime}
+                              {item.postType}
+                              {item.postType === "top" && item.postTime
+                                ? `/${item.postTime}`
+                                : ""}
                             </span>
                           </div>
                           <span className="text-xs text-gray-400">

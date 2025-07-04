@@ -27,22 +27,22 @@ const VAG = localFont({
 
 export default function Header() {
   return (
-    <div className="flex justify-between items-center flex-nowrap border-b border-[#1a282d] h-auto sticky top-0 bg-background z-50">
-      <div className="flex items-center px-5">
+    <div className="flex justify-between items-center flex-nowrap border-b border-[#1a282d] h-16 sticky top-0 bg-background z-50">
+      <div className="flex items-center px-5 h-full">
         <img
           src="/icons/test_out_33.png"
           alt="icon"
           className="w-12 h-12 mr-2"
         />
-        <h1 className={`${VAG.variable} w-fit my-2 text-3xl font-extrabold`}>
+        <h1 className={`${VAG.variable} w-fit text-3xl font-extrabold`}>
           reddit gallery
         </h1>
       </div>
-      <div className="flex items-center justify-center flex-grow">
+      <div className="flex items-center justify-center flex-grow h-full">
         <Search />
         <Scale />
       </div>
-      <div className="flex items-center m-0 mx-[5px] ">
+      <div className="flex items-center h-full px-5">
         <Options />
       </div>
     </div>

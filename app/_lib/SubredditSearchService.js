@@ -4,9 +4,11 @@ import dotenv from "dotenv";
 import fetch from "node-fetch";
 import NodeCache from "node-cache";
 
-dotenv.config({ path: '.env' });
+dotenv.config({ path: ".env" });
 
+// Cache with a short TTL for search results to prevent duplicate requests
 const cache = new NodeCache({ stdTTL: 3600 }); // Cache TTL set to 1 hour
+const searchCache = new NodeCache({ stdTTL: 60 }); // Short cache for search results (1 minute)
 
 async function getReadOnlyAccessToken() {
   const response = await fetch("https://www.reddit.com/api/v1/access_token", {
@@ -49,6 +51,14 @@ async function validateToken(token) {
 }
 
 export async function listSubreddits(subredditName) {
+  // Check if this exact search term has been cached recently
+  const cachedResults = searchCache.get(subredditName);
+  if (cachedResults) {
+    console.log(`Using cached results for "${subredditName}"`);
+    return cachedResults;
+  }
+
+  // Proceed with API call if not cached
   let accessToken = await getStoredRefreshToken();
 
   if (!accessToken || !(await validateToken(accessToken))) {
@@ -63,10 +73,42 @@ export async function listSubreddits(subredditName) {
     accessToken: accessToken,
   });
 
-  const subredditResults = await r.searchSubredditNames(
+  // First get the basic subreddit names that match the search
+  const subredditNames = await r.searchSubredditNames(
     { query: subredditName },
     { includeNsfw: true }
   );
-  // console.log(subredditResults)
-  return subredditResults;
+
+  const detailedSubreddits = await Promise.all(
+    subredditNames.slice(0, 7).map(async (name) => {
+      try {
+        const subreddit = await r.getSubreddit(name).fetch();
+        return {
+          name: subreddit.display_name,
+          displayName: subreddit.display_name_prefixed,
+          iconImg:
+            subreddit.icon_img || subreddit.community_icon || "/icons/dp.png",
+          subscribers: subreddit.subscribers || 0,
+          isNSFW: subreddit.over18,
+        };
+      } catch (error) {
+        console.error(`Error fetching details for ${name}:`, error);
+        return {
+          name: name,
+          displayName: "r/" + name,
+          iconImg: "/icons/dp.png",
+          subscribers: 0,
+          description: "",
+          isNSFW: false,
+        };
+      }
+    })
+  );
+
+  detailedSubreddits.sort((a, b) => b.subscribers - a.subscribers);
+  
+  // Cache the results for this search term
+  searchCache.set(subredditName, detailedSubreddits);
+  
+  return detailedSubreddits;
 }
