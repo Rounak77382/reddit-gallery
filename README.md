@@ -1,11 +1,10 @@
-<div style="display: flex; align-items: center; gap: 12px;">
-  <img src="public/icons/test_out_33.png" alt="Reddit Gallery" width="45" height="45" />
-  <span style="font-size: 2.5em; font-weight: bold;padding-bottom:0.1em">Reddit Gallery</span>
-</div>
+# Reddit Gallery
 
 A modern, responsive Reddit media gallery built with Next.js that transforms Reddit browsing into a beautiful, Pinterest-style visual experience. Browse your favorite subreddits with smart layout optimization, secure authentication, and real-time media streaming.
 
 **🌐 Live Demo**: [reddit-gallery-real.vercel.app](https://reddit-gallery-real.vercel.app)
+
+![Reddit Gallery Preview](public/icons/test_out_33.png)
 
 ## ✨ Features
 
@@ -246,3 +245,6 @@ npm run start
 ⭐ **If you found this project helpful, please give it a star!**
 
 _Built with ❤️ by the community for Reddit enthusiasts_
+
+
+
