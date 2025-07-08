@@ -4,7 +4,7 @@ A modern, responsive Reddit media gallery built with Next.js that transforms Red
 
 **🌐 Live Demo**: [reddit-gallery-real.vercel.app](https://reddit-gallery-real.vercel.app)
 
-![Reddit Gallery Preview](public/icons/test_out_33.png)
+<img src="public/icons/test_out_33.png" alt="Reddit Gallery Preview" width="250">
 
 ## ✨ Features
 
