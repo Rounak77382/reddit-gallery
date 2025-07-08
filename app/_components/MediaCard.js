@@ -198,7 +198,7 @@ export default function Card({ imageData }) {
   // Generate position-based transform classes
   const getPositionClasses = () => {
     // Base classes that always apply
-    let classes = "relative h-[400px] flex justify-center items-center m-5 group hover:z-50 transition-all duration-500 ease-in-out shadow-lg shadow-black/50";
+    let classes = "relative h-[400px] flex justify-center items-center m-1 group hover:z-50 transition-all duration-500 ease-in-out shadow-lg shadow-black/50";
     
     // Default hover scaling
     let hoverTransform = "hover:scale-105";
@@ -211,9 +211,9 @@ export default function Card({ imageData }) {
     }
     
     if (position.isTopEdge) {
-      hoverTransform += " hover:translate-y-3";
+      hoverTransform += " hover:translate-y-10";
     } else if (position.isBottomEdge) {
-      hoverTransform += " hover:-translate-y-3";
+      hoverTransform += " hover:-translate-y-10";
     }
     
     return `${classes} ${hoverTransform}`;

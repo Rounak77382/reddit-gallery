@@ -111,10 +111,10 @@ export default function Options() {
 
   return (
     <>
-      <div className="flex justify-center w-[60px] p-2 mx-[2px] rounded-[20px] bg-[#1a282d] text-white hover:bg-[#472323] active:scale-90 transition-all duration-300 ease-in-out h-10">
+      <div className="flex justify-center items-center w-[60px] p-2 mx-[2px] rounded-[20px] bg-[#1a282d] text-white hover:bg-[#472323] active:scale-90 transition-all duration-300 ease-in-out h-10">
         <button
           onClick={handleNSFWToggle}
-          className={`bg-transparent border-none font-medium cursor-pointer text-[15px] ${
+          className={`bg-transparent border-none font-medium cursor-pointer text-[16px] flex items-center justify-center ${
             state.isNSFWAllowed ? "text-red-500" : "text-green-500"
           }`}
         >

@@ -42,7 +42,7 @@ export default function Header() {
         <Search />
         <Scale />
       </div>
-      <div className="flex items-center h-full px-5">
+      <div className="flex items-center h-full px-1">
         <Options />
       </div>
     </div>

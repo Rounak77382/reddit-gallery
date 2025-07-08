@@ -20,23 +20,30 @@ export default function Sidebar() {
     const fetchTopChannels = async () => {
       setIsLoading(true);
       try {
-        // Fetch some popular subreddits - in a real app you'd have an API for this
-        const popularSubreddits = [
-          { name: "pics", followers: "29.8M" },
-          { name: "funny", followers: "42.6M" },
-          { name: "AskReddit", followers: "40.5M" },
-          { name: "gaming", followers: "36.2M" },
-          { name: "aww", followers: "32.4M" },
-          { name: "Music", followers: "31.8M" },
-          { name: "worldnews", followers: "30.4M" },
-          { name: "movies", followers: "29.7M" },
-          { name: "videos", followers: "26.3M" },
-          { name: "science", followers: "28.9M" },
-        ];
+        const response = await fetch("/api/popular-subreddits?limit=19");
+        if (!response.ok) {
+          throw new Error("Failed to fetch popular subreddits");
+        }
 
-        setTopChannels(popularSubreddits);
+        const popularSubreddits = await response.json();
+
+        // Format the data to match the expected structure
+        const formattedChannels = popularSubreddits.map((sub) => ({
+          name: sub.name,
+          title: sub.title,
+          followers:
+            sub.subscribers >= 1000000
+              ? `${(sub.subscribers / 1000000).toFixed(1)}M`
+              : sub.subscribers >= 1000
+              ? `${(sub.subscribers / 1000).toFixed(1)}K`
+              : sub.subscribers.toString(),
+        }));
+
+        setTopChannels(formattedChannels);
       } catch (error) {
         console.error("Error fetching top channels:", error);
+        // Fallback to empty array if API fails
+        setTopChannels([]);
       } finally {
         setIsLoading(false);
       }
@@ -70,13 +77,15 @@ export default function Sidebar() {
 
   return (
     <div
-      className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${
-        isOpen ? "translate-x-0" : "-translate-x-[calc(100%-24px)]"
+      className={`fixed top-0 left-0 h-full transition-all duration-300 ${
+        isOpen
+          ? "translate-x-0 z-[60] "
+          : "-translate-x-[calc(100%-24px)] z-[40]"
       }`}
     >
       {/* Sidebar Content */}
       <div className="flex h-full">
-        <div className="w-64 bg-primary shadow-lg shadow-black/30 pt-16 flex flex-col">
+        <div className="w-64 bg-primary shadow-lg shadow-black/30  flex flex-col ">
           {/* Tabs */}
           <div className="flex border-b border-gray-700 mx-2">
             <button
@@ -147,6 +156,10 @@ export default function Sidebar() {
                 </h3>
                 {isLoading ? (
                   <p className="text-gray-500 text-sm px-2">Loading...</p>
+                ) : topChannels.length === 0 ? (
+                  <p className="text-gray-500 text-sm px-2">
+                    Unable to load popular subreddits
+                  </p>
                 ) : (
                   <ul>
                     {topChannels.map((channel, index) => (
@@ -154,6 +167,7 @@ export default function Sidebar() {
                         <button
                           onClick={() => handleSelectSubreddit(channel.name)}
                           className="w-full text-left px-3 py-2 rounded hover:bg-secondary flex items-center justify-between text-foreground"
+                          title={channel.title}
                         >
                           <span className="text-sm">r/{channel.name}</span>
                           <span className="text-xs text-gray-400">
@@ -173,7 +187,7 @@ export default function Sidebar() {
         <div className="flex items-center">
           <button
             onClick={toggleSidebar}
-            className="bg-primary h-16 w-6 rounded-r-md flex items-center justify-center shadow-md"
+            className="bg-primary h-16 w-6 rounded-r-md flex items-center justify-center shadow-lg shadow-black/30 hover:bg-secondary transition-colors"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

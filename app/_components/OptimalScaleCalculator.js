@@ -181,7 +181,7 @@ export default function Scale() {
     console.log("screenWidth: ", screenWidth);
 
     // Calculate optimal scales
-    const scales = minimumgap(cardWidths, screenWidth, 20, 20);
+    const scales = minimumgap(cardWidths, screenWidth, 15, 4);
     if (scales.length > 0) {
       console.log("Found optimal scales:", scales);
       setOptimalScales(scales);
@@ -304,7 +304,7 @@ export default function Scale() {
           type="range"
           id="scaleSlider"
           min="0.500"
-          max="2.000"
+          max="1.800"
           step={isSnapEnabled && optimalScales.length > 0 ? "0.001" : "0.001"}
           value={state.scaleValue}
           onChange={handleScaleChange}
