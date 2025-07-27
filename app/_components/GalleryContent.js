@@ -158,33 +158,48 @@ export default function Download({ formData }) {
   );
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        width: "100%",
-        padding: "1px",
-        zoom: state.scaleValue,
-      }}
-    >
-      {/* Real images that have already loaded */}
-      {images.map((image, index) => (
-        <div
-          key={`image-${index}`}
-          style={{ position: "relative", width: "auto" }}
-          id={`scaleOptimizer-${index}`}
-          className="scale-optimizer-card"
-          data-loaded="true"
-        >
-          <Card imageData={image} />
-        </div>
-      ))}
+    <div className="gallery-container-wrapper" style={{ width: "100%" }}>
+      <div
+        className="gallery-container"
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          width: `${100 / parseFloat(state.scaleValue)}%`, // Adjust width inversely to scale
+          padding: "1px",
+          transform: `scale(${state.scaleValue})`,
+          transformOrigin: "top left",
+          transition: "transform 0.5s ease-in-out", // Smooth transition
+        }}
+      >
+        {/* Real images that have already loaded */}
+        {images.map((image, index) => (
+          <div
+            key={`image-${index}`}
+            style={{
+              width: "auto",
+              position: "relative",
+              zIndex: 5,
+            }}
+            id={`scaleOptimizer-${index}`}
+            className="scale-optimizer-card"
+            data-loaded="true"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.zIndex = "999";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.zIndex = "5";
+            }}
+          >
+            <Card imageData={image} />
+          </div>
+        ))}
 
-      {/* Placeholder shimmer cards for remaining items */}
-      {remainingPlaceholders > 0 &&
-        Array(remainingPlaceholders)
-          .fill(0)
-          .map((_, index) => <ShimmerCard key={`shimmer-${index}`} />)}
+        {/* Placeholder shimmer cards for remaining items */}
+        {remainingPlaceholders > 0 &&
+          Array(remainingPlaceholders)
+            .fill(0)
+            .map((_, index) => <ShimmerCard key={`shimmer-${index}`} />)}
+      </div>
     </div>
   );
 }

@@ -27,7 +27,7 @@ const VAG = localFont({
 
 export default function Header() {
   return (
-    <div className="flex justify-between items-center flex-nowrap border-b border-[#1a282d] h-16 sticky top-0 bg-background z-50">
+    <div className="flex justify-between items-center flex-nowrap border-b border-[#1a282d] h-16  top-0 bg-background z-50">
       <div className="flex items-center px-5 h-full">
         <img
           src="/icons/test_out_33.png"

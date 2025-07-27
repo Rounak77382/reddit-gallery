@@ -57,7 +57,7 @@ export default function Card({ imageData }) {
   const [localDownvotes, setLocalDownvotes] = useState(
     downvotes ? downvotes.toString().toUpperCase() : "0"
   );
-  
+
   // Add refs and state for position detection
   const cardRef = useRef(null);
   const positionCheckerRef = useRef(null);
@@ -65,28 +65,29 @@ export default function Card({ imageData }) {
     isLeftEdge: false,
     isRightEdge: false,
     isTopEdge: false,
-    isBottomEdge: false
+    isBottomEdge: false,
   });
 
   // Effect to detect card position relative to viewport
   useEffect(() => {
     const checkPosition = () => {
       if (!cardRef.current) return;
-      
+
       const rect = cardRef.current.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      
+
       // Define margins (distance from edge to consider "at edge")
-      const edgeMargin = 150; 
-      
+      const edgeMargin = 150;
+      const headerHeight = 64;
+
       const newPosition = {
         isLeftEdge: rect.left < edgeMargin,
         isRightEdge: rect.right > viewportWidth - edgeMargin,
-        isTopEdge: rect.top < edgeMargin,
-        isBottomEdge: rect.bottom > viewportHeight - edgeMargin
+        isTopEdge: rect.top < edgeMargin + headerHeight,
+        isBottomEdge: rect.bottom > viewportHeight - edgeMargin,
       };
-      
+
       // Only update state if position actually changed
       if (JSON.stringify(newPosition) !== JSON.stringify(position)) {
         setPosition(newPosition);
@@ -95,11 +96,11 @@ export default function Card({ imageData }) {
 
     // Check position on mount
     checkPosition();
-    
+
     // Check on scroll and resize
-    window.addEventListener('resize', checkPosition);
-    window.addEventListener('scroll', checkPosition);
-    
+    window.addEventListener("resize", checkPosition);
+    window.addEventListener("scroll", checkPosition);
+
     // Use IntersectionObserver instead of interval for better performance
     const observer = new IntersectionObserver(
       (entries) => {
@@ -108,20 +109,23 @@ export default function Card({ imageData }) {
       },
       { threshold: [0, 0.5, 1] }
     );
-    
-    if (cardRef.current) {
-      observer.observe(cardRef.current);
+
+    // Store current ref value in a variable for cleanup
+    const currentRef = cardRef.current;
+
+    if (currentRef) {
+      observer.observe(currentRef);
     }
-    
+
     return () => {
-      window.removeEventListener('resize', checkPosition);
-      window.removeEventListener('scroll', checkPosition);
-      if (cardRef.current) {
-        observer.unobserve(cardRef.current);
+      window.removeEventListener("resize", checkPosition);
+      window.removeEventListener("scroll", checkPosition);
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
       observer.disconnect();
     };
-  }, []);
+  }, [position]);
 
   const handleVote = async (direction) => {
     if (!state.isLoggedIn) {
@@ -198,24 +202,26 @@ export default function Card({ imageData }) {
   // Generate position-based transform classes
   const getPositionClasses = () => {
     // Base classes that always apply
-    let classes = "relative h-[400px] flex justify-center items-center m-1 group hover:z-50 transition-all duration-500 ease-in-out shadow-lg shadow-black/50";
-    
+    let classes =
+      "relative h-[400px] flex justify-center items-center m-1 group hover:z-50 transition-all duration-500 ease-in-out shadow-lg shadow-black/50";
+
     // Default hover scaling
     let hoverTransform = "hover:scale-105";
-    
+
     // Adjust hover transform based on position
     if (position.isLeftEdge) {
       hoverTransform = "hover:scale-105 hover:translate-x-3";
     } else if (position.isRightEdge) {
       hoverTransform = "hover:scale-105 hover:-translate-x-3";
     }
-    
+
     if (position.isTopEdge) {
-      hoverTransform += " hover:translate-y-10";
+      // Add more downward propagation for content at the top edge to account for header
+      hoverTransform += " hover:translate-y-16";
     } else if (position.isBottomEdge) {
       hoverTransform += " hover:-translate-y-10";
     }
-    
+
     return `${classes} ${hoverTransform}`;
   };
 
