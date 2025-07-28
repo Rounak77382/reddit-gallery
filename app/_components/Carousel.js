@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useAppContext } from "./AppContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { slideAnimationVariants } from "../_lib/AnimationConfig";
 
 export default function Carousel({ imageData }) {
   const [maxWidth, setMaxWidth] = useState(250);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(0);
   const { state } = useAppContext();
   const { isNSFWAllowed } = state;
 
@@ -32,10 +35,12 @@ export default function Carousel({ imageData }) {
   }, [imageData.url]);
 
   const nextImage = () => {
+    setDirection(1);
     setCurrentIndex((prevIndex) => (prevIndex + 1) % imageData.url.length);
   };
 
   const prevImage = () => {
+    setDirection(-1);
     setCurrentIndex(
       (prevIndex) =>
         (prevIndex - 1 + imageData.url.length) % imageData.url.length
@@ -52,21 +57,32 @@ export default function Carousel({ imageData }) {
         </div>
       )}
       <div
-        className="relative h-[400px] rounded-lg transition ease duration-500 z-10 bg-[#000000] object-cover overflow-clip flex justify-center items-center"
+        className="relative h-[400px] rounded-lg z-10 bg-[#000000] object-cover overflow-clip flex justify-center items-center"
         style={{ width: `${maxWidth}px` }}
       >
-        <img
-          src={imageData.url[currentIndex]}
-          alt={`Slide ${currentIndex}`}
-          className={`
-            w-auto h-full object-cover rounded-lg 
-            transition-all duration-500 ease-in-out
-            ${imageData.isNSFW && !isNSFWAllowed ? "blur-xl" : ""}
-          `}
-          onError={(e) => {
-            e.target.onerror = null;
-          }}
-        />
+        <AnimatePresence initial={false} custom={direction} mode="popLayout">
+          <motion.img
+            key={currentIndex}
+            custom={direction}
+            variants={slideAnimationVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 },
+            }}
+            src={imageData.url[currentIndex]}
+            alt={`Slide ${currentIndex}`}
+            className={`
+              w-auto h-full object-cover rounded-lg 
+              ${imageData.isNSFW && !isNSFWAllowed ? "blur-xl" : ""}
+            `}
+            onError={(e) => {
+              e.target.onerror = null;
+            }}
+          />
+        </AnimatePresence>
         {(!imageData.isNSFW || isNSFWAllowed) && (
           <>
             <button
@@ -83,12 +99,17 @@ export default function Carousel({ imageData }) {
             </button>
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
               {imageData.url.map((_, index) => (
-                <span
+                <motion.span
                   key={index}
                   className={`h-2 w-2 rounded-full ${
                     index === currentIndex ? "bg-white" : "bg-gray-400"
                   } cursor-pointer`}
-                  onClick={() => setCurrentIndex(index)}
+                  onClick={() => {
+                    setDirection(index > currentIndex ? 1 : -1);
+                    setCurrentIndex(index);
+                  }}
+                  whileHover={{ scale: 1.5 }}
+                  transition={{ duration: 0.2 }}
                 />
               ))}
             </div>

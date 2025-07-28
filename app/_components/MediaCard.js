@@ -1,8 +1,13 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 import Media from "./Media";
 import { useAppContext } from "./AppContext";
+import { motion } from "framer-motion"; // Import framer-motion
+import {
+  usePositionDetection,
+  getPositionAwareVariants,
+} from "../_lib/PositionUtils";
 
 // Helper function to convert vote string (like "10K", "1.5M") to number
 const parseVotes = (voteStr) => {
@@ -57,189 +62,246 @@ export default function Card({ imageData }) {
   const [localDownvotes, setLocalDownvotes] = useState(
     downvotes ? downvotes.toString().toUpperCase() : "0"
   );
+  const [isZoomed, setIsZoomed] = useState(false);
 
-  // Add refs and state for position detection
+  // Add refs for position detection
   const cardRef = useRef(null);
-  const positionCheckerRef = useRef(null);
-  const [position, setPosition] = useState({
-    isLeftEdge: false,
-    isRightEdge: false,
-    isTopEdge: false,
-    isBottomEdge: false,
-  });
 
-  // Effect to detect card position relative to viewport
-  useEffect(() => {
-    const checkPosition = () => {
-      if (!cardRef.current) return;
+  // Use our custom hook to detect position
+  const position = usePositionDetection(cardRef, 180, 64);
 
-      const rect = cardRef.current.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-
-      // Define margins (distance from edge to consider "at edge")
-      const edgeMargin = 150;
-      const headerHeight = 64;
-
-      const newPosition = {
-        isLeftEdge: rect.left < edgeMargin,
-        isRightEdge: rect.right > viewportWidth - edgeMargin,
-        isTopEdge: rect.top < edgeMargin + headerHeight,
-        isBottomEdge: rect.bottom > viewportHeight - edgeMargin,
-      };
-
-      // Only update state if position actually changed
-      if (JSON.stringify(newPosition) !== JSON.stringify(position)) {
-        setPosition(newPosition);
+  const handleVote = React.useCallback(
+    async (direction) => {
+      if (!state.isLoggedIn) {
+        alert("Please log in to vote");
+        return;
       }
-    };
 
-    // Check position on mount
-    checkPosition();
+      try {
+        const response = await fetch(`/api/vote`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: id,
+            direction: direction,
+            accessToken: state.accessToken,
+          }),
+        });
 
-    // Check on scroll and resize
-    window.addEventListener("resize", checkPosition);
-    window.addEventListener("scroll", checkPosition);
+        if (response.ok) {
+          // Update local state
+          const newVoteStatus = direction === voteStatus ? 0 : direction;
+          setVoteStatus(newVoteStatus);
 
-    // Use IntersectionObserver instead of interval for better performance
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // When visibility changes, check position
-        checkPosition();
-      },
-      { threshold: [0, 0.5, 1] }
-    );
+          // Don't update displayed vote counts if they're in K or M format
+          const upvotesHasNotation =
+            typeof localUpvotes === "string" &&
+            (localUpvotes.includes("K") || localUpvotes.includes("M"));
 
-    // Store current ref value in a variable for cleanup
-    const currentRef = cardRef.current;
+          const downvotesHasNotation =
+            typeof localDownvotes === "string" &&
+            (localDownvotes.includes("K") || localDownvotes.includes("M"));
 
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
+          // Only update when not in K/M notation
+          if (newVoteStatus === 1) {
+            if (!upvotesHasNotation) {
+              const upvotesNum = parseVotes(localUpvotes) + 1;
+              setLocalUpvotes(formatVotes(upvotesNum));
+            }
 
-    return () => {
-      window.removeEventListener("resize", checkPosition);
-      window.removeEventListener("scroll", checkPosition);
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
-      observer.disconnect();
-    };
-  }, [position]);
+            if (voteStatus === -1 && !downvotesHasNotation) {
+              const downvotesNum = parseVotes(localDownvotes) - 1;
+              setLocalDownvotes(formatVotes(downvotesNum));
+            }
+          } else if (newVoteStatus === -1) {
+            if (!downvotesHasNotation) {
+              const downvotesNum = parseVotes(localDownvotes) + 1;
+              setLocalDownvotes(formatVotes(downvotesNum));
+            }
 
-  const handleVote = async (direction) => {
-    if (!state.isLoggedIn) {
-      alert("Please log in to vote");
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/vote`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: id,
-          direction: direction,
-          accessToken: state.accessToken,
-        }),
-      });
-
-      if (response.ok) {
-        // Update local state
-        const newVoteStatus = direction === voteStatus ? 0 : direction;
-        setVoteStatus(newVoteStatus);
-
-        // Don't update displayed vote counts if they're in K or M format
-        const upvotesHasNotation =
-          typeof localUpvotes === "string" &&
-          (localUpvotes.includes("K") || localUpvotes.includes("M"));
-
-        const downvotesHasNotation =
-          typeof localDownvotes === "string" &&
-          (localDownvotes.includes("K") || localDownvotes.includes("M"));
-
-        // Only update when not in K/M notation
-        if (newVoteStatus === 1) {
-          if (!upvotesHasNotation) {
-            const upvotesNum = parseVotes(localUpvotes) + 1;
-            setLocalUpvotes(formatVotes(upvotesNum));
-          }
-
-          if (voteStatus === -1 && !downvotesHasNotation) {
-            const downvotesNum = parseVotes(localDownvotes) - 1;
-            setLocalDownvotes(formatVotes(downvotesNum));
-          }
-        } else if (newVoteStatus === -1) {
-          if (!downvotesHasNotation) {
-            const downvotesNum = parseVotes(localDownvotes) + 1;
-            setLocalDownvotes(formatVotes(downvotesNum));
-          }
-
-          if (voteStatus === 1 && !upvotesHasNotation) {
-            const upvotesNum = parseVotes(localUpvotes) - 1;
-            setLocalUpvotes(formatVotes(upvotesNum));
+            if (voteStatus === 1 && !upvotesHasNotation) {
+              const upvotesNum = parseVotes(localUpvotes) - 1;
+              setLocalUpvotes(formatVotes(upvotesNum));
+            }
+          } else {
+            // Removing vote
+            if (voteStatus === 1 && !upvotesHasNotation) {
+              const upvotesNum = parseVotes(localUpvotes) - 1;
+              setLocalUpvotes(formatVotes(upvotesNum));
+            } else if (voteStatus === -1 && !downvotesHasNotation) {
+              const downvotesNum = parseVotes(localDownvotes) - 1;
+              setLocalDownvotes(formatVotes(downvotesNum));
+            }
           }
         } else {
-          // Removing vote
-          if (voteStatus === 1 && !upvotesHasNotation) {
-            const upvotesNum = parseVotes(localUpvotes) - 1;
-            setLocalUpvotes(formatVotes(upvotesNum));
-          } else if (voteStatus === -1 && !downvotesHasNotation) {
-            const downvotesNum = parseVotes(localDownvotes) - 1;
-            setLocalDownvotes(formatVotes(downvotesNum));
-          }
+          alert("Failed to vote");
         }
-      } else {
-        alert("Failed to vote");
+      } catch (error) {
+        console.error("Error voting:", error);
       }
-    } catch (error) {
-      console.error("Error voting:", error);
-    }
-  };
+    },
+    [
+      id,
+      localDownvotes,
+      localUpvotes,
+      state.accessToken,
+      state.isLoggedIn,
+      voteStatus,
+    ]
+  );
 
-  // Generate position-based transform classes
-  const getPositionClasses = () => {
+  // Generate position-based transform classes - memoized to avoid recalculations
+  const getPositionClasses = React.useMemo(() => {
     // Base classes that always apply
     let classes =
-      "relative h-[400px] flex justify-center items-center m-1 group hover:z-50 transition-all duration-500 ease-in-out shadow-lg shadow-black/50";
+      "relative h-[400px] flex justify-center items-center m-1 group hover:z-50 transition-all duration-700 ease-in-out shadow-lg shadow-black/50";
 
-    // Default hover scaling
-    let hoverTransform = "hover:scale-105";
+    // Origin classes based on position
+    if ("left" in position && "right" in position) {
+      // If we have detailed position data, use it for more precise calculations
+      // Removed unused variables for performance
+      // Determine the dominant edge for transform-origin
+      if (
+        Math.abs(position.left) <
+        Math.abs(position.right - position.viewportWidth)
+      ) {
+        classes += " origin-left";
+      } else {
+        classes += " origin-right";
+      }
 
-    // Adjust hover transform based on position
-    if (position.isLeftEdge) {
-      hoverTransform = "hover:scale-105 hover:translate-x-3";
-    } else if (position.isRightEdge) {
-      hoverTransform = "hover:scale-105 hover:-translate-x-3";
+      if (
+        Math.abs(position.top - 64) <
+        Math.abs(position.bottom - position.viewportHeight)
+      ) {
+        classes += " origin-top";
+      } else {
+        classes += " origin-bottom";
+      }
+    } else {
+      // Fallback to basic position flags
+      if (position.isLeftEdge) {
+        classes += " origin-left";
+      } else if (position.isRightEdge) {
+        classes += " origin-right";
+      }
+
+      if (position.isTopEdge) {
+        classes += " origin-top";
+      } else if (position.isBottomEdge) {
+        classes += " origin-bottom";
+      }
     }
 
-    if (position.isTopEdge) {
-      // Add more downward propagation for content at the top edge to account for header
-      hoverTransform += " hover:translate-y-16";
-    } else if (position.isBottomEdge) {
-      hoverTransform += " hover:-translate-y-10";
-    }
+    return classes;
+  }, [position]); // Only recalculate when position changes
 
-    return `${classes} ${hoverTransform}`;
-  };
+  // Get position-aware animation variants - memoized to avoid recalculation
+  const cardVariants = React.useMemo(
+    () => getPositionAwareVariants(position, 1.05, 20, 30),
+    [position]
+  );
+
+  // More precise detection of first row: check if top edge is within header height + some margin
+  // This ensures we only apply special behavior to cards directly under the header
+  const headerHeight = 64; // Header height in pixels
+  const isFirstRow =
+    position.top !== undefined && position.top < headerHeight + 80;
+
+  // Memoize content variants to avoid recreation on each render
+  const contentVariants = React.useMemo(
+    () => ({
+      hidden: {
+        opacity: 0,
+        scaleY: 0.75,
+        y: 0,
+        zIndex: 1, // Lower z-index when hidden
+        transition: {
+          duration: 0.2, // Faster exit transition
+          ease: "easeOut", // Changed to easeOut for smoother exit
+        },
+      },
+      visible: {
+        opacity: 1,
+        scaleY: 1,
+        // Only first row gets extra downward movement on hover
+        y: isFirstRow ? 60 : 0,
+        zIndex: 5, // Higher z-index when visible, but still below media
+        transition: {
+          duration: 0.3, // Slightly faster transition
+          ease: "easeOut",
+        },
+      },
+    }),
+    [isFirstRow]
+  );
+
+  // Create separate variants for the media to match the card movement - memoized
+  const mediaVariants = React.useMemo(
+    () => ({
+      normal: {
+        y: 0,
+        zIndex: 10, // Always keep media on top
+        transition: {
+          duration: 0.3, // Match content transition duration
+          ease: "easeOut", // Changed to easeOut for smoother exit
+        },
+      },
+      zoomed: {
+        // Move media down by the same amount as the card content for first row
+        y: isFirstRow ? 60 : 0,
+        zIndex: 10, // Always keep media on top
+        transition: {
+          duration: 0.3, // Match content transition duration
+          ease: "easeOut",
+        },
+      },
+    }),
+    [isFirstRow]
+  );
 
   return (
-    <div
+    <motion.div
       ref={cardRef}
-      className={getPositionClasses()}
+      className={getPositionClasses}
       style={{
         width: `${Math.max(
           Math.round(Math.min(parseFloat(aspect_ratio || 1.33), 2) * 400),
           250
         )}px`,
+        willChange: "transform", // Help browser optimize animations
       }}
       data-aspect-ratio={Math.min(parseFloat(aspect_ratio || 1.33), 2)}
+      // Optimized Framer Motion props
+      layout="position" // Use "position" instead of true for better performance
+      initial="normal"
+      animate={isZoomed ? "zoomed" : "normal"}
+      variants={cardVariants}
+      whileHover="zoomed" // Use the zoomed variant on hover
+      onHoverStart={() => setIsZoomed(true)}
+      onHoverEnd={() => setIsZoomed(false)}
+      transition={{ layout: { type: "tween", duration: 0.3 } }} // Optimize layout transition
     >
-      <div className="flex flex-col justify-between absolute w-full bg-primary text-foreground h-[125%] rounded-lg transform scale-y-[0.75] transition-transform duration-500 ease group-hover:scale-y-[1] group-hover:-translate-y-3.5 z-10 p-1 shadow-lg shadow-black/50 opacity-0 group-hover:opacity-100 ">
-        {/* Card content remains the same */}
-        <div className="flex flex-col justify-start items-start m-0 p-0 h-fit space-y-2 ">
+      <motion.div
+        className={`flex flex-col justify-between absolute w-full bg-primary text-foreground rounded-lg z-[5] p-1 shadow-lg shadow-black/50 sharp-text ${
+          isZoomed ? "h-[125%]" : "h-0"
+        }`}
+        initial="hidden"
+        animate={isZoomed ? "visible" : "hidden"}
+        variants={contentVariants}
+        exit="hidden"
+        style={{
+          transformOrigin: "top",
+          overflow: "hidden",
+          transition:
+            "height 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), top 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)",
+          top: isZoomed ? "-65px" : "0",
+        }}
+      >
+        {/* Title and author section - simplified for performance */}
+        <div className="flex flex-col justify-start items-start m-0 p-0 h-fit space-y-2">
           <a href={userurl} className="flex items-center">
             <img
               src={author_dp || "https://www.reddit.com/static/noavatar.png"}
@@ -348,8 +410,18 @@ export default function Card({ imageData }) {
             </div>
           </div>
         </div>
-      </div>
-      <Media imageData={imageData} />
-    </div>
+      </motion.div>
+      <motion.div
+        className="absolute w-full h-full z-[10]"
+        variants={mediaVariants}
+        initial="normal"
+        animate={isZoomed ? "zoomed" : "normal"}
+        style={{
+          pointerEvents: "auto", // Make sure media always receives mouse events
+        }}
+      >
+        <Media imageData={imageData} />
+      </motion.div>
+    </motion.div>
   );
 }

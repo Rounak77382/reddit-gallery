@@ -152,7 +152,7 @@ export default function Download({ formData }) {
   }, [images.length, isLoading, remainingPlaceholders]);
 
   const ShimmerCard = () => (
-    <div className="relative w-[400px] h-[400px] m-5 opacity-5 shadow-lg shadow-black/50">
+    <div className="relative w-[400px] h-[400px] m-1 opacity-5 shadow-lg shadow-black/50">
       <ShimmerThumbnail height={400} rounded />
     </div>
   );

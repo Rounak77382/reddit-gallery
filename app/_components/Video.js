@@ -4,6 +4,7 @@ import Hls from "hls.js";
 
 const HLSPlayer = memo(({ url, title, controls, imageData, isNSFWAllowed }) => {
   const videoRef = useRef(null);
+  const containerRef = useRef(null);
   const hlsRef = useRef(null);
   const [blobUrl, setBlobUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -87,13 +88,13 @@ const HLSPlayer = memo(({ url, title, controls, imageData, isNSFWAllowed }) => {
   }
 
   return (
-    <>
+    <div ref={containerRef} className="w-full h-full">
       {isLoading && (
         <div className="w-full h-[400px] bg-[#1a282d] animate-pulse rounded-lg" />
       )}
       <video
         ref={videoRef}
-        className={`w-full h-[400px] min-w-[250px] transition-all ease duration-500 rounded-lg bg-[#000000] object-cover relative z-20 hover:z-40 
+        className={`w-full h-[400px] min-w-[250px] rounded-lg bg-[#000000] object-cover relative
         ${isLoading ? "hidden" : "block"} 
         ${imageData.isNSFW && !isNSFWAllowed ? "blur-xl" : ""}`}
         controls={controls}
@@ -109,7 +110,7 @@ const HLSPlayer = memo(({ url, title, controls, imageData, isNSFWAllowed }) => {
           setIsLoading(false);
         }}
       />
-    </>
+    </div>
   );
 });
 
@@ -124,7 +125,7 @@ export default function Video({ imageData }) {
   }
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden h-full w-full">
       {imageData.isNSFW && !isNSFWAllowed && (
         <div className="absolute top-2 right-2 z-30">
           <span className="bg-red-500/80 text-white px-2 py-1 rounded text-sm font-bold">

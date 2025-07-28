@@ -1,7 +1,8 @@
 "use client";
 import { useAppContext } from "./AppContext";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Fragment } from "react";
 import { minimumgap } from "../_lib/OptimalLayoutCalculator";
+import { motion } from "framer-motion";
 
 export default function Scale() {
   const { state, dispatch } = useAppContext();
@@ -102,10 +103,18 @@ export default function Scale() {
           scaleClosestToOne
         );
 
+        // Use a small animation effect when applying new scale
         dispatch({
           type: "SET_SCALE",
           payload: scaleClosestToOne.toFixed(3),
         });
+
+        // Dispatch a UI event that can be used for animation
+        window.dispatchEvent(
+          new CustomEvent("optimalScaleApplied", {
+            detail: { scale: scaleClosestToOne.toFixed(3) },
+          })
+        );
       }
     }
   }, [optimalScales, dispatch]);
@@ -294,58 +303,117 @@ export default function Scale() {
         id="scaleControl"
         className="flex items-center justify-between p-3 py-2 bg-primary rounded-full h-10"
       >
-        <label
+        <motion.label
           htmlFor="scaleSlider"
-          className="mx-2.5 text-foreground text-[15px] w-[40px]"
+          className="mx-2.5 text-foreground text-[15px] w-[40px] font-medium"
         >
           Scale
-        </label>
-        <input
-          type="range"
-          id="scaleSlider"
-          min="0.500"
-          max="1.800"
-          step={isSnapEnabled && optimalScales.length > 0 ? "0.001" : "0.001"}
-          value={state.scaleValue}
-          onChange={handleScaleChange}
-          className="cursor-pointer w-[180px] h-2.5 rounded-lg bg-gray-300 outline-none opacity-70 transition-opacity duration-200"
-          style={{
-            WebkitAppearance: "none",
-            appearance: "none",
-            height: "10px",
-            borderRadius: "7.5px",
-            background:
-              isSnapEnabled && optimalScales.length > 0
-                ? `linear-gradient(to right, #f0f0f0, ${optimalScales
-                    .map(
-                      (scale, i) =>
-                        `#ff4500 ${((scale - 0.5) / 1.5) * 100}%, #f0f0f0 ${
-                          ((scale - 0.5) / 1.5) * 100 + 1
-                        }%`
-                    )
-                    .join(", ")}, #f0f0f0)`
-                : "#f0f0f0",
-            outline: "none",
-            opacity: "0.7",
-            transition: "opacity .2s, background .3s",
-          }}
-        />
-        <span className="mx-2.5 text-foreground text-[15px] w-[40px] text-center">
+        </motion.label>
+        <div className="relative w-[180px]">
+          <motion.div
+            className="absolute top-1/2 left-0 right-0 h-[6px] -translate-y-1/2 rounded-full overflow-hidden"
+            style={{
+              background: "rgba(240, 240, 240, 0.6)",
+              boxShadow: "inset 0 1px 2px rgba(0, 0, 0, 0.1)",
+            }}
+          >
+            {/* Parallel line markers for optimal scales when in auto mode */}
+            {isSnapEnabled &&
+              optimalScales.length > 0 &&
+              optimalScales.map((scale, index) => (
+                <Fragment key={`marker-group-${index}`}>
+                  {/* Main marker line */}
+                  <div
+                    className="absolute top-0 h-full w-[2px]"
+                    style={{
+                      left: `${((scale - 0.5) / 1) * 100}%`,
+                      background: "#ff4500",
+                      transform: "translateX(-50%)",
+                      boxShadow: "0 0 4px rgba(255, 69, 0, 0.5)",
+                      zIndex: 2,
+                    }}
+                  />
+                  {/* Top highlight dot */}
+                  <div
+                    className="absolute top-0 w-[4px] h-[4px] rounded-full"
+                    style={{
+                      left: `${((scale - 0.5) / 1) * 100}%`,
+                      background: "#ffffff",
+                      transform: "translateX(-50%)",
+                      boxShadow: "0 0 2px rgba(255, 255, 255, 0.8)",
+                      zIndex: 3,
+                    }}
+                  />
+                  {/* Bottom highlight dot */}
+                  <div
+                    className="absolute bottom-0 w-[4px] h-[4px] rounded-full"
+                    style={{
+                      left: `${((scale - 0.5) / 1) * 100}%`,
+                      background: "#ffffff",
+                      transform: "translateX(-50%)",
+                      boxShadow: "0 0 2px rgba(255, 255, 255, 0.8)",
+                      zIndex: 3,
+                    }}
+                  />
+                </Fragment>
+              ))}
+            {/* Slider progress fill */}
+            <motion.div
+              className="absolute top-0 left-0 h-full"
+              style={{
+                width: `${((parseFloat(state.scaleValue) - 0.5) / 1) * 100}%`,
+                background:
+                  "linear-gradient(90deg, rgba(255,69,0,0.7) 0%, rgba(255,87,34,0.9) 100%)",
+                borderRadius: "inherit",
+                zIndex: 1,
+              }}
+            />
+          </motion.div>
+          <input
+            type="range"
+            id="scaleSlider"
+            min="0.500"
+            max="1.500"
+            step="0.001"
+            value={state.scaleValue}
+            onChange={handleScaleChange}
+            className="cursor-pointer w-[180px] rounded-full bg-transparent relative z-10 outline-none opacity-100 transition-opacity duration-200"
+            style={{
+              WebkitAppearance: "none",
+              appearance: "none",
+              height: "6px",
+              borderRadius: "999px",
+              verticalAlign: "middle",
+              margin: "0 auto",
+            }}
+          />
+        </div>
+        <span
+          className={`mx-2.5 text-foreground text-[15px] w-[40px] text-center font-medium ${
+            isSnapEnabled ? "text-[#ff4500]" : "text-white"
+          }`}
+        >
           {parseFloat(state.scaleValue).toFixed(3)}
         </span>
         <button
           onClick={toggleSnapMode}
-          className={`ml-2 ${
-            isSnapEnabled && optimalScales.length > 0
-              ? "bg-[#ff4400]"
-              : "bg-gray-600"
-          } text-white px-2 py-1 rounded-full text-xs hover:bg-[#ff440073] transition-colors`}
+          className={`ml-2 text-white px-3 py-1 rounded-full text-xs font-medium relative overflow-hidden`}
+          style={{
+            background:
+              isSnapEnabled && optimalScales.length > 0
+                ? "linear-gradient(135deg, #ff5722, #ff4500)"
+                : "linear-gradient(135deg, #757575, #616161)",
+            boxShadow:
+              isSnapEnabled && optimalScales.length > 0
+                ? "0 2px 5px rgba(255, 69, 0, 0.3)"
+                : "0 2px 5px rgba(0, 0, 0, 0.2)",
+          }}
+          disabled={optimalScales.length === 0}
           title={
             isSnapEnabled && optimalScales.length > 0
               ? "Disable snap to optimal scales"
               : "Enable snap to optimal scales"
           }
-          disabled={optimalScales.length === 0}
         >
           Auto
         </button>
@@ -355,11 +423,32 @@ export default function Scale() {
         #scaleSlider::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
-          width: 15px;
-          height: 15px;
-          background: #ff4500;
+          width: 12px;
+          height: 12px;
+          background: linear-gradient(135deg, #ff5722, #ff4500);
           border-radius: 50%;
           cursor: pointer;
+          box-shadow: 0 0 0 2px rgba(255, 69, 0, 0.1),
+            0 1px 3px rgba(0, 0, 0, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          position: relative;
+          top: -1px;
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        #scaleSlider::-webkit-slider-thumb:hover {
+          box-shadow: 0 0 0 3px rgba(255, 69, 0, 0.15),
+            0 2px 5px rgba(0, 0, 0, 0.25);
+        }
+
+        #scaleSlider::-webkit-slider-thumb:active {
+          transform: scale(0.92);
+          box-shadow: 0 0 0 2px rgba(255, 69, 0, 0.2),
+            0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        #scaleSlider:focus {
+          outline: none;
         }
       `}</style>
     </div>
