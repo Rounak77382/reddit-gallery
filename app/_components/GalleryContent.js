@@ -166,6 +166,7 @@ export default function Download({ formData }) {
           flexWrap: "wrap",
           width: `${100 / parseFloat(state.scaleValue)}%`, // Adjust width inversely to scale
           padding: "1px",
+          paddingBottom: "75px", // Ensure enough space for the footer
           transform: `scale(${state.scaleValue})`,
           transformOrigin: "top left",
           transition: "transform 0.5s ease-in-out", // Smooth transition
