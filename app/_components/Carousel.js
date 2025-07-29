@@ -6,33 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { slideAnimationVariants } from "../_lib/AnimationConfig";
 
 export default function Carousel({ imageData }) {
-  const [maxWidth, setMaxWidth] = useState(250);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const { state } = useAppContext();
   const { isNSFWAllowed } = state;
-
-  useEffect(() => {
-    let max_width = 250;
-    const loadImages = imageData.url.map((url) => {
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.src = url;
-        img.onload = () => {
-          const aspectRatio = img.width / img.height;
-          const width = aspectRatio * 400;
-          if (width > max_width) {
-            max_width = width;
-          }
-          resolve();
-        };
-      });
-    });
-
-    Promise.all(loadImages).then(() => {
-      setMaxWidth(Math.floor(max_width));
-    });
-  }, [imageData.url]);
 
   const nextImage = () => {
     setDirection(1);
@@ -48,7 +25,7 @@ export default function Carousel({ imageData }) {
   };
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden h-full w-full">
       {imageData.isNSFW && !isNSFWAllowed && (
         <div className="absolute top-2 right-2 z-30">
           <span className="bg-red-500/80 text-white px-2 py-1 rounded text-sm font-bold">
@@ -56,10 +33,7 @@ export default function Carousel({ imageData }) {
           </span>
         </div>
       )}
-      <div
-        className="relative h-[400px] rounded-lg z-10 bg-[#000000] object-cover overflow-clip flex justify-center items-center"
-        style={{ width: `${maxWidth}px` }}
-      >
+      <div className="relative h-[400px] rounded-lg z-10 bg-[#000000] object-cover overflow-hidden flex justify-center items-center">
         <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <motion.img
             key={currentIndex}
@@ -75,7 +49,7 @@ export default function Carousel({ imageData }) {
             src={imageData.url[currentIndex]}
             alt={`Slide ${currentIndex}`}
             className={`
-              w-auto h-full object-cover rounded-lg 
+              max-w-full max-h-[400px] object-contain rounded-lg 
               ${imageData.isNSFW && !isNSFWAllowed ? "blur-xl" : ""}
             `}
             onError={(e) => {

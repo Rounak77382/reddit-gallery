@@ -15,13 +15,11 @@ export default function SimpleImage({ imageData }) {
           </span>
         </div>
       )}
-      <div className="relative h-[400px] rounded-lg z-10 bg-[#000000] object-cover overflow-clip flex justify-center items-center">
+      <div className="relative h-[400px] rounded-lg z-10 bg-[#000000] object-cover overflow-hidden flex justify-center items-center">
         <img
           src={imageData.url}
           alt={imageData.url || "Image"}
-          className={`w-full h-[400px] min-w-[250px] 
-          rounded-lg 
-          relative z-10 
+          className={`max-w-full max-h-[400px] rounded-lg relative z-10 
           object-contain
           ${imageData.isNSFW && !isNSFWAllowed ? "blur-xl" : ""}
           `}

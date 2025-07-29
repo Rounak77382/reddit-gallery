@@ -94,7 +94,7 @@ const HLSPlayer = memo(({ url, title, controls, imageData, isNSFWAllowed }) => {
       )}
       <video
         ref={videoRef}
-        className={`w-full h-[400px] min-w-[250px] rounded-lg bg-[#000000] object-cover relative
+        className={`max-w-full max-h-[400px] rounded-lg bg-[#000000] object-contain relative
         ${isLoading ? "hidden" : "block"} 
         ${imageData.isNSFW && !isNSFWAllowed ? "blur-xl" : ""}`}
         controls={controls}

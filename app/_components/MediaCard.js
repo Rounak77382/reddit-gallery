@@ -268,7 +268,10 @@ export default function Card({ imageData }) {
       className={getPositionClasses}
       style={{
         width: `${Math.max(
-          Math.round(Math.min(parseFloat(aspect_ratio || 1.33), 2) * 400),
+          Math.min(
+            Math.round(Math.min(parseFloat(aspect_ratio || 1.33), 2) * 400),
+            window.innerWidth * 0.9
+          ),
           250
         )}px`,
         willChange: "transform", // Help browser optimize animations
