@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Media from "./Media";
 import { useAppContext } from "./AppContext";
 import { motion } from "framer-motion"; // Import framer-motion
@@ -35,7 +35,7 @@ const formatVotes = (votes) => {
   }
 };
 
-export default function Card({ imageData }) {
+export default function Card({ imageData, targetWidth, targetHeight }) {
   const {
     id,
     url,
@@ -57,18 +57,48 @@ export default function Card({ imageData }) {
   const { state } = useAppContext();
   const [voteStatus, setVoteStatus] = useState(0);
   const [localUpvotes, setLocalUpvotes] = useState(
-    upvotes ? upvotes.toString().toUpperCase() : "0"
+    upvotes ? upvotes.toString().toUpperCase() : "0",
   );
   const [localDownvotes, setLocalDownvotes] = useState(
-    downvotes ? downvotes.toString().toUpperCase() : "0"
+    downvotes ? downvotes.toString().toUpperCase() : "0",
   );
   const [isZoomed, setIsZoomed] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentCarouselUrl, setCurrentCarouselUrl] = useState(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Add refs for position detection
   const cardRef = useRef(null);
+  const mediaRef = useRef(null);
 
   // Use our custom hook to detect position
   const position = usePositionDetection(cardRef, 180, 64);
+
+  // Listen for carousel image change events
+  useEffect(() => {
+    // Handler for carousel image change events
+    const handleCarouselChange = (event) => {
+      if (event.detail && event.detail.id === id) {
+        setCurrentCarouselUrl(event.detail.currentUrl);
+      }
+    };
+
+    // Add event listener to the card element
+    const element = cardRef.current;
+    if (element) {
+      element.addEventListener("carouselImageChange", handleCarouselChange);
+    }
+
+    // Clean up the event listener
+    return () => {
+      if (element) {
+        element.removeEventListener(
+          "carouselImageChange",
+          handleCarouselChange,
+        );
+      }
+    };
+  }, [id]);
 
   const handleVote = React.useCallback(
     async (direction) => {
@@ -149,14 +179,14 @@ export default function Card({ imageData }) {
       state.accessToken,
       state.isLoggedIn,
       voteStatus,
-    ]
+    ],
   );
 
   // Generate position-based transform classes - memoized to avoid recalculations
   const getPositionClasses = React.useMemo(() => {
     // Base classes that always apply
     let classes =
-      "relative h-[400px] flex justify-center items-center m-1 group hover:z-50 transition-all duration-700 ease-in-out shadow-lg shadow-black/50";
+      "relative flex justify-center items-center group hover:z-50 transition-all duration-700 ease-in-out shadow-lg shadow-black/50";
 
     // Origin classes based on position
     if ("left" in position && "right" in position) {
@@ -201,7 +231,7 @@ export default function Card({ imageData }) {
   // Get position-aware animation variants - memoized to avoid recalculation
   const cardVariants = React.useMemo(
     () => getPositionAwareVariants(position, 1.05, 20, 30),
-    [position]
+    [position],
   );
 
   // More precise detection of first row: check if top edge is within header height + some margin
@@ -235,7 +265,7 @@ export default function Card({ imageData }) {
         },
       },
     }),
-    [isFirstRow]
+    [isFirstRow],
   );
 
   // Create separate variants for the media to match the card movement - memoized
@@ -259,21 +289,110 @@ export default function Card({ imageData }) {
         },
       },
     }),
-    [isFirstRow]
+    [isFirstRow],
   );
+
+  // Handle download function
+  const handleDownload = async () => {
+    setIsDownloading(true);
+
+    try {
+      // First priority: Use the currentCarouselUrl if available (for carousel items)
+      if (currentCarouselUrl) {
+        window.open(
+          `/api/downloader?url=${encodeURIComponent(currentCarouselUrl)}`,
+          "_blank",
+        );
+        setIsDownloading(false);
+        return;
+      }
+
+      // Second priority: Use mediaurl if available
+      if (mediaurl) {
+        window.open(
+          `/api/downloader?url=${encodeURIComponent(mediaurl)}`,
+          "_blank",
+        );
+        setIsDownloading(false);
+        return;
+      }
+
+      // Third priority: Use the first item in url array if it's an array (carousel fallback)
+      if (Array.isArray(url) && url.length > 0) {
+        // Use the first image in the carousel as fallback
+        window.open(
+          `/api/downloader?url=${encodeURIComponent(url[0])}`,
+          "_blank",
+        );
+        setIsDownloading(false);
+        return;
+      }
+
+      // If all else fails
+      alert("No media URL available for download");
+    } catch (error) {
+      console.error("Download error:", error);
+      alert("Failed to download media. Please try again later.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  // Handle fullscreen function
+  const handleFullscreen = () => {
+    if (!mediaRef.current) {
+      // If we don't have a direct media ref, try to get the first media element inside the card
+      const mediaElement =
+        cardRef.current?.querySelector("img") ||
+        cardRef.current?.querySelector("video");
+      if (!mediaElement) {
+        alert("Cannot find media to display in fullscreen");
+        return;
+      }
+
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      } else {
+        try {
+          mediaElement.requestFullscreen();
+          setIsFullscreen(true);
+        } catch (err) {
+          console.error("Error attempting to enable fullscreen:", err);
+          alert("Failed to enter fullscreen mode");
+        }
+      }
+    } else {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      } else {
+        try {
+          mediaRef.current.requestFullscreen();
+          setIsFullscreen(true);
+        } catch (err) {
+          console.error("Error attempting to enable fullscreen:", err);
+          alert("Failed to enter fullscreen mode");
+        }
+      }
+    }
+  };
 
   return (
     <motion.div
       ref={cardRef}
       className={getPositionClasses}
       style={{
-        width: `${Math.max(
-          Math.min(
-            Math.round(Math.min(parseFloat(aspect_ratio || 1.33), 2) * 400),
-            window.innerWidth * 0.9
-          ),
-          250
-        )}px`,
+        width: targetWidth
+          ? `${targetWidth}px`
+          : `${Math.max(
+              Math.min(
+                Math.round(Math.min(parseFloat(aspect_ratio || 1.33), 2) * 400),
+                window.innerWidth * 0.9,
+              ),
+              300,
+            )}px`,
+        height: targetHeight ? `${targetHeight}px` : "400px",
         willChange: "transform", // Help browser optimize animations
       }}
       data-aspect-ratio={Math.min(parseFloat(aspect_ratio || 1.33), 2)}
@@ -288,9 +407,7 @@ export default function Card({ imageData }) {
       transition={{ layout: { type: "tween", duration: 0.3 } }} // Optimize layout transition
     >
       <motion.div
-        className={`flex flex-col justify-between absolute w-full bg-primary text-foreground rounded-lg z-[5] p-1 shadow-lg shadow-black/50 sharp-text ${
-          isZoomed ? "h-[125%]" : "h-0"
-        }`}
+        className={`flex flex-col justify-between absolute w-full bg-primary text-foreground rounded-lg z-[5] p-1 shadow-lg shadow-black/50 sharp-text`}
         initial="hidden"
         animate={isZoomed ? "visible" : "hidden"}
         variants={contentVariants}
@@ -301,6 +418,7 @@ export default function Card({ imageData }) {
           transition:
             "height 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), top 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)",
           top: isZoomed ? "-65px" : "0",
+          height: isZoomed ? "calc(100% + 100px)" : "0px",
         }}
       >
         {/* Title and author section - simplified for performance */}
@@ -341,75 +459,127 @@ export default function Card({ imageData }) {
             {title || ""}
           </p>
         </div>
-        <div className="flex items-center m-0 mx-1.25 p-1 h-fit">
-          <div className="flex justify-center items-center bg-secondary px-1 mr-2 py-0.5 rounded-lg m-0.25 hover:bg-[#1e4c57] cursor-pointer transition-colors duration-300">
-            <button
-              onClick={() => handleVote(1)}
-              className="flex items-center border-none bg-transparent cursor-pointer"
-            >
-              <img
-                src={
-                  voteStatus === 1
-                    ? "/icons/upvote_clicked.png"
-                    : "/icons/upvote.png"
-                }
-                alt="Upvote"
-                className="h-4"
-                onMouseEnter={(e) =>
-                  (e.target.src =
+        <div className="flex items-center m-0 mx-1.25 p-1 h-fit overflow-x-auto w-full gap-2">
+          {/* Left group: upvote/downvote/comment/link/download/fullscreen */}
+          <div className="flex items-center gap-2">
+            <div className="flex justify-center items-center bg-secondary px-1 py-0.5 rounded-lg m-0.25 hover:bg-[#1e4c57] cursor-pointer transition-colors duration-300">
+              <button
+                onClick={() => handleVote(1)}
+                className="flex items-center border-none bg-transparent cursor-pointer"
+              >
+                <img
+                  src={
                     voteStatus === 1
                       ? "/icons/upvote_clicked.png"
-                      : "/icons/upvote_hovered.png")
-                }
-                onMouseLeave={(e) =>
-                  (e.target.src =
-                    voteStatus === 1
-                      ? "/icons/upvote_clicked.png"
-                      : "/icons/upvote.png")
-                }
-              />
-              <div className="flex items-center justify-center text-foreground h-4 mx-1">
-                {localUpvotes}
-              </div>
-            </button>
-            <button
-              onClick={() => handleVote(-1)}
-              className="flex items-center border-none bg-transparent cursor-pointer"
-            >
+                      : "/icons/upvote.png"
+                  }
+                  alt="Upvote"
+                  className="h-4"
+                  onMouseEnter={(e) =>
+                    (e.target.src =
+                      voteStatus === 1
+                        ? "/icons/upvote_clicked.png"
+                        : "/icons/upvote_hovered.png")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.target.src =
+                      voteStatus === 1
+                        ? "/icons/upvote_clicked.png"
+                        : "/icons/upvote.png")
+                  }
+                />
+                <div className="flex items-center justify-center text-foreground h-4 mx-1">
+                  {localUpvotes}
+                </div>
+              </button>
+              <button
+                onClick={() => handleVote(-1)}
+                className="flex items-center border-none bg-transparent cursor-pointer"
+              >
+                <img
+                  src={
+                    voteStatus === -1
+                      ? "/icons/downvote_clicked.png"
+                      : "/icons/downvote.png"
+                  }
+                  alt="Downvote"
+                  className="h-4"
+                  onMouseEnter={(e) =>
+                    (e.target.src =
+                      voteStatus === -1
+                        ? "/icons/downvote_clicked.png"
+                        : "/icons/downvote_hovered.png")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.target.src =
+                      voteStatus === -1
+                        ? "/icons/downvote_clicked.png"
+                        : "/icons/downvote.png")
+                  }
+                />
+                <div className="flex items-center justify-center text-foreground h-4 mx-1">
+                  {localDownvotes}
+                </div>
+              </button>
+            </div>
+            <div className="flex justify-center items-center bg-secondary px-1.25 py-0.5 rounded-lg m-0.25 hover:bg-[#1e4c57] cursor-pointer transition-colors duration-300 px-1">
               <img
-                src={
-                  voteStatus === -1
-                    ? "/icons/downvote_clicked.png"
-                    : "/icons/downvote.png"
-                }
-                alt="Downvote"
-                className="h-4"
-                onMouseEnter={(e) =>
-                  (e.target.src =
-                    voteStatus === -1
-                      ? "/icons/downvote_clicked.png"
-                      : "/icons/downvote_hovered.png")
-                }
-                onMouseLeave={(e) =>
-                  (e.target.src =
-                    voteStatus === -1
-                      ? "/icons/downvote_clicked.png"
-                      : "/icons/downvote.png")
-                }
+                src="/icons/comment.svg"
+                alt="Comments"
+                className="h-4 mr-1 mx-1"
               />
-              <div className="flex items-center justify-center text-foreground h-4 mx-1">
-                {localDownvotes}
+              <div className="flex items-center justify-center text-foreground h-4 mr-1">
+                {comments || "0"}
               </div>
-            </button>
+            </div>
           </div>
-          <div className="flex justify-center items-center bg-secondary px-1.25 py-0.5 rounded-lg m-0.25 hover:bg-[#1e4c57] cursor-pointer transition-colors duration-300 px-1">
-            <img
-              src="/icons/comment.svg"
-              alt="Comments"
-              className="h-4 mr-1 mx-1"
-            />
-            <div className="flex items-center justify-center text-foreground h-4 mr-1">
-              {comments || "0"}
+          {/* Go to link button */}
+          {siteurl && (
+            <div className="flex justify-center items-center bg-secondary px-1 py-0.5 rounded-lg m-0.25 hover:bg-[#1e4c57] cursor-pointer transition-colors duration-300">
+              <div
+                onClick={() => window.open(siteurl, "_blank")}
+                className="flex justify-center items-center"
+              >
+                <img
+                  src="/icons/link.svg"
+                  alt="Go to link"
+                  className="h-4 mx-1"
+                />
+              </div>
+            </div>
+          )}
+          {/* Download button */}
+          {(mediaurl ||
+            currentCarouselUrl ||
+            (Array.isArray(url) && url.length > 0)) && (
+            <div
+              className={`flex justify-center items-center bg-secondary px-1 py-0.5 rounded-lg m-0.25 hover:bg-[#1e4c57] cursor-pointer transition-colors duration-300 ${
+                isDownloading ? "opacity-50" : ""
+              }`}
+            >
+              <div
+                onClick={() => handleDownload()}
+                className="flex justify-center items-center"
+              >
+                <img
+                  src="/icons/download.svg"
+                  alt="Download"
+                  className={`h-4 mx-1 ${isDownloading ? "animate-pulse" : ""}`}
+                />
+              </div>
+            </div>
+          )}
+          {/* Fullscreen button */}
+          <div className="flex justify-center items-center bg-secondary px-1 py-0.5 rounded-lg m-0.25 hover:bg-[#1e4c57] cursor-pointer transition-colors duration-300">
+            <div
+              onClick={() => handleFullscreen()}
+              className="flex justify-center items-center"
+            >
+              <img
+                src="/icons/fullscreen.svg"
+                alt="Fullscreen"
+                className="h-4 mx-1"
+              />
             </div>
           </div>
         </div>
@@ -423,7 +593,11 @@ export default function Card({ imageData }) {
           pointerEvents: "auto", // Make sure media always receives mouse events
         }}
       >
-        <Media imageData={imageData} />
+        <Media
+          imageData={imageData}
+          ref={mediaRef}
+          onCarouselImageChange={(url) => setCurrentCarouselUrl(url)}
+        />
       </motion.div>
     </motion.div>
   );

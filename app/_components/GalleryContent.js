@@ -3,6 +3,7 @@ import { useAppContext } from "./AppContext";
 import { useEffect, useState, useRef } from "react";
 import Card from "./MediaCard";
 import { ShimmerThumbnail } from "react-shimmer-effects";
+import { calculateJustifiedLayout } from "../_lib/JustifiedLayout";
 
 export default function Download({ formData }) {
   const [images, setImages] = useState([]);
@@ -12,6 +13,9 @@ export default function Download({ formData }) {
   const allImagesLoaded = useRef(false);
   const [remainingPlaceholders, setRemainingPlaceholders] = useState(0);
   const imagesLoadedTriggered = useRef(false);
+  const containerRef = useRef(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [layouts, setLayouts] = useState([]);
 
   useEffect(() => {
     if (formData?.postLimit) {
@@ -151,19 +155,76 @@ export default function Download({ formData }) {
     }
   }, [images.length, isLoading, remainingPlaceholders]);
 
-  const ShimmerCard = () => (
-    <div className="relative w-[400px] h-[400px] m-1 opacity-5 shadow-lg shadow-black/50">
-      <ShimmerThumbnail height={400} rounded />
+  // Add an effect to track container width
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    // Use ResizeObserver for responsive width
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+    
+    observer.observe(containerRef.current);
+    
+    // Fallback initial
+    setContainerWidth(containerRef.current.getBoundingClientRect().width);
+    
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  // Calculate layout whenever images or container width change with debounce to prevent jerking
+  useEffect(() => {
+    if (containerWidth <= 0 && images.length === 0) return;
+
+    const timeoutId = setTimeout(() => {
+      const combinedItems = [];
+      images.forEach(img => {
+        // Enforce a minimum aspect ratio of 0.75 (300px width for 400px height) 
+        // to prevent thin cards from squishing the hover control buttons
+        combinedItems.push({ 
+          aspectRatio: Math.max(parseFloat(img.aspect_ratio || 1.33), 0.75) 
+        });
+      });
+      
+      for (let i = 0; i < remainingPlaceholders; i++) {
+        combinedItems.push({ aspectRatio: 1.33 }); // Placeholders default ratio
+      }
+      
+      const computedLayouts = calculateJustifiedLayout({
+        containerWidth: containerWidth - 2, // slight tolerance
+        targetRowHeight: 400,
+        items: combinedItems,
+        gap: 16 // increased default gap
+      });
+
+      setLayouts(computedLayouts);
+    }, 120); // 120ms debounce prevents recalculating 60 times a second
+
+    return () => clearTimeout(timeoutId);
+  }, [images, remainingPlaceholders, containerWidth]);
+
+  const ShimmerCard = ({ targetWidth = 400, targetHeight = 400 }) => (
+    <div 
+      className="relative opacity-5 shadow-lg shadow-black/50" 
+      style={{ width: `${targetWidth}px`, height: `${targetHeight}px` }}
+    >
+      <ShimmerThumbnail height={targetHeight} width={targetWidth} rounded />
     </div>
   );
 
   return (
     <div className="gallery-container-wrapper" style={{ width: "100%" }}>
       <div
+        ref={containerRef}
         className="gallery-container"
         style={{
           display: "flex",
           flexWrap: "wrap",
+          gap: "16px",
           width: `${100 / parseFloat(state.scaleValue)}%`, // Adjust width inversely to scale
           padding: "1px",
           paddingBottom: "75px", // Ensure enough space for the footer
@@ -173,33 +234,41 @@ export default function Download({ formData }) {
         }}
       >
         {/* Real images that have already loaded */}
-        {images.map((image, index) => (
-          <div
-            key={`image-${index}`}
-            style={{
-              width: "auto",
-              position: "relative",
-              zIndex: 5,
-            }}
-            id={`scaleOptimizer-${index}`}
-            className="scale-optimizer-card"
-            data-loaded="true"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.zIndex = "999";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.zIndex = "5";
-            }}
-          >
-            <Card imageData={image} />
-          </div>
-        ))}
+        {images.map((image, index) => {
+          const layout = layouts[index] || { width: 400, height: 400 };
+          return (
+            <div
+              key={`image-${index}`}
+              style={{
+                width: `${layout.width}px`,
+                height: `${layout.height}px`,
+                position: "relative",
+                zIndex: 5,
+              }}
+              id={`scaleOptimizer-${index}`}
+              className="scale-optimizer-card"
+              data-loaded="true"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.zIndex = "999";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.zIndex = "5";
+              }}
+            >
+              <Card imageData={image} targetWidth={layout.width} targetHeight={layout.height} />
+            </div>
+          );
+        })}
 
         {/* Placeholder shimmer cards for remaining items */}
         {remainingPlaceholders > 0 &&
           Array(remainingPlaceholders)
             .fill(0)
-            .map((_, index) => <ShimmerCard key={`shimmer-${index}`} />)}
+            .map((_, index) => {
+              const layoutIndex = images.length + index;
+              const layout = layouts[layoutIndex] || { width: 400, height: 400 };
+              return <ShimmerCard key={`shimmer-${index}`} targetWidth={layout.width} targetHeight={layout.height} />;
+            })}
       </div>
     </div>
   );

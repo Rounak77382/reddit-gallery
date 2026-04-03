@@ -1,7 +1,7 @@
 import { useAppContext } from "./AppContext";
-import { useRef } from "react";
+import { useRef, forwardRef } from "react";
 
-export default function SimpleImage({ imageData }) {
+const SimpleImage = forwardRef(({ imageData }, ref) => {
   const { state } = useAppContext();
   const { isNSFWAllowed } = state;
   const containerRef = useRef(null);
@@ -15,11 +15,12 @@ export default function SimpleImage({ imageData }) {
           </span>
         </div>
       )}
-      <div className="relative h-[400px] rounded-lg z-10 bg-[#000000] object-cover overflow-hidden flex justify-center items-center">
+      <div className="relative h-full rounded-lg z-10 bg-[#000000] object-cover overflow-hidden flex justify-center items-center">
         <img
+          ref={ref}
           src={imageData.url}
           alt={imageData.url || "Image"}
-          className={`max-w-full max-h-[400px] rounded-lg relative z-10 
+          className={`max-w-full max-h-full rounded-lg relative z-10 
           object-contain
           ${imageData.isNSFW && !isNSFWAllowed ? "blur-xl" : ""}
           `}
@@ -30,4 +31,8 @@ export default function SimpleImage({ imageData }) {
       </div>
     </div>
   );
-}
+});
+
+SimpleImage.displayName = "SimpleImage";
+
+export default SimpleImage;

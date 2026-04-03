@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef } from "react";
 import Carousel from "./Carousel";
 import SimpleImage from "./StaticImage";
 import Video from "./Video";
@@ -8,7 +8,7 @@ import LinkPreview from "./LinkPreview";
 import TextContent from "./TextContent";
 import { marked } from "marked";
 
-export default function Media({ imageData }) {
+const Media = forwardRef(({ imageData, onCarouselImageChange }, ref) => {
   const [parsedContent, setParsedContent] = useState("");
   const imageFormats = [".jpg", ".jpeg", ".png", ".gif"];
   const urlWithoutParams =
@@ -32,17 +32,28 @@ export default function Media({ imageData }) {
     (typeof imageData.url === "string" && imageData.url.endsWith(".mp4")) ||
     imageData.url.includes("v.redd.it")
   ) {
-    return <Video imageData={imageData} />;
+    return <Video imageData={imageData} ref={ref} />;
   } else if (Array.isArray(imageData.url)) {
-    return <Carousel imageData={imageData} />;
+    return (
+      <Carousel
+        imageData={imageData}
+        ref={ref}
+        onImageChange={onCarouselImageChange}
+      />
+    );
   } else if (imageFormats.some((format) => urlWithoutParams.endsWith(format))) {
-    return <SimpleImage imageData={imageData} />;
+    return <SimpleImage imageData={imageData} ref={ref} />;
   } else {
     // If there's body content, display that
     if (imageData.body) {
-      return <TextContent content={parsedContent} />;
+      return <TextContent content={parsedContent} ref={ref} />;
     } else if (imageData.url) {
-      return <LinkPreview imageData={imageData} />;
+      return <LinkPreview imageData={imageData} ref={ref} />;
     }
   }
-}
+});
+
+// Add display name to the forwarded ref component
+Media.displayName = "Media";
+
+export default Media;

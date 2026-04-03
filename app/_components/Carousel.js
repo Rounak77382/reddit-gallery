@@ -1,15 +1,62 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef } from "react";
 import { useAppContext } from "./AppContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { slideAnimationVariants } from "../_lib/AnimationConfig";
 
-export default function Carousel({ imageData }) {
+const Carousel = forwardRef(({ imageData, onImageChange }, ref) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const { state } = useAppContext();
   const { isNSFWAllowed } = state;
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    function handleFullscreenChange() {
+      if (!ref || !ref.current) return;
+      setIsFullscreen(document.fullscreenElement === ref.current);
+    }
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, [ref]);
+
+  // Create a custom event to notify the parent component of the current image URL
+  useEffect(() => {
+    if (Array.isArray(imageData.url) && imageData.url.length > 0) {
+      const currentUrl = imageData.url[currentIndex];
+
+      // Call the callback if provided
+      if (onImageChange && typeof onImageChange === "function") {
+        onImageChange(currentUrl);
+      }
+
+      // Create and dispatch a custom event when the carousel index changes
+      const event = new CustomEvent("carouselImageChange", {
+        detail: {
+          id: imageData.id,
+          currentUrl,
+        },
+        bubbles: true,
+      });
+
+      // Find a DOM element to dispatch from
+      const element = document.querySelector(
+        `[data-media-id="${imageData.id}"]`
+      );
+      if (element) {
+        element.dispatchEvent(event);
+      }
+
+      // Also update the mediaurl property for direct access
+      if (imageData.mediaurl !== currentUrl) {
+        imageData.mediaurl = currentUrl;
+      }
+    }
+  }, [currentIndex, imageData, onImageChange]);
 
   const nextImage = () => {
     setDirection(1);
@@ -24,8 +71,22 @@ export default function Carousel({ imageData }) {
     );
   };
 
+  // Add a function to directly get the current image URL
+  const getCurrentImageUrl = () => {
+    if (Array.isArray(imageData.url) && imageData.url.length > 0) {
+      return imageData.url[currentIndex];
+    }
+    return null;
+  };
+
   return (
-    <div className="relative overflow-hidden h-full w-full">
+    <div
+      className={`relative overflow-hidden h-full w-full ${
+        isFullscreen ? "z-[9999] bg-black" : ""
+      }`}
+      data-media-id={imageData.id}
+      ref={ref}
+    >
       {imageData.isNSFW && !isNSFWAllowed && (
         <div className="absolute top-2 right-2 z-30">
           <span className="bg-red-500/80 text-white px-2 py-1 rounded text-sm font-bold">
@@ -33,7 +94,10 @@ export default function Carousel({ imageData }) {
           </span>
         </div>
       )}
-      <div className="relative h-[400px] rounded-lg z-10 bg-[#000000] object-cover overflow-hidden flex justify-center items-center">
+      <div
+        className={`relative rounded-lg z-10 bg-[#000000] object-cover overflow-hidden flex justify-center items-center transition-all duration-300 h-full min-h-0`}
+        style={isFullscreen ? { height: "100%" } : {}}
+      >
         <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <motion.img
             key={currentIndex}
@@ -48,10 +112,10 @@ export default function Carousel({ imageData }) {
             }}
             src={imageData.url[currentIndex]}
             alt={`Slide ${currentIndex}`}
-            className={`
-              max-w-full max-h-[400px] object-contain rounded-lg 
+            className={`object-contain rounded-lg max-w-full max-h-full
               ${imageData.isNSFW && !isNSFWAllowed ? "blur-xl" : ""}
             `}
+            style={isFullscreen ? { width: "100%", height: "100%" } : {}}
             onError={(e) => {
               e.target.onerror = null;
             }}
@@ -92,4 +156,8 @@ export default function Carousel({ imageData }) {
       </div>
     </div>
   );
-}
+});
+
+Carousel.displayName = "Carousel";
+
+export default Carousel;

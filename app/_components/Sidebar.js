@@ -78,9 +78,7 @@ export default function Sidebar() {
   return (
     <div
       className={`fixed top-0 left-0 h-full transition-all duration-300 ${
-        isOpen
-          ? "translate-x-0 z-[60] "
-          : "-translate-x-[calc(100%-24px)] z-[40]"
+        isOpen ? "translate-x-0 z-[60]" : "-translate-x-full z-[40]"
       }`}
     >
       {/* Sidebar Content */}
@@ -184,7 +182,7 @@ export default function Sidebar() {
         </div>
 
         {/* Toggle button */}
-        <div className="flex items-center">
+        <div className="absolute top-[40%] left-full z-50">
           <button
             onClick={toggleSidebar}
             className="bg-primary h-16 w-6 rounded-r-md flex items-center justify-center shadow-lg shadow-black/30 hover:bg-secondary transition-colors"

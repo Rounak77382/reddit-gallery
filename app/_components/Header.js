@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Scale from "./OptimalScaleCalculator";
 import Search from "./Search";
+import Scale from "./OptimalScaleCalculator";
 import dynamic from "next/dynamic";
 import localFont from "next/font/local";
 

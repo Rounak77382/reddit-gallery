@@ -3,7 +3,7 @@
 export default function TextContent({ content }) {
   return (
     <div 
-      className="w-full h-[400px] rounded-lg min-w-[250px] overflow-y-auto prose prose-invert bg-primary"
+      className="w-full h-full rounded-lg min-w-[250px] overflow-y-auto prose prose-invert bg-primary"
       style={{ 
         msOverflowStyle: 'none', 
         scrollbarWidth: 'none' 

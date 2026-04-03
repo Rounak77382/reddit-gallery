@@ -7,7 +7,7 @@ export default function LinkPreview({ imageData }) {
     const faviconUrl = `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`;
 
     return (
-      <div className="w-full h-[400px] rounded-lg min-w-[250px] bg-primary p-6 flex flex-col z-20 hover:z-40 overflow-hidden">
+      <div className="w-full h-full rounded-lg min-w-[250px] bg-primary p-6 flex flex-col z-20 hover:z-40 overflow-hidden">
         <div className="flex items-center mb-4">
           {/* Generic web icon */}
           <div
@@ -116,7 +116,7 @@ export default function LinkPreview({ imageData }) {
   } catch (error) {
     console.error("Error rendering URL preview:", error);
     return (
-      <div className="w-full h-[400px] rounded-lg min-w-[250px] flex items-center justify-center bg-primary text-white">
+      <div className="w-full h-full rounded-lg min-w-[250px] flex items-center justify-center bg-primary text-white">
         <a
           href={imageData.url}
           target="_blank"

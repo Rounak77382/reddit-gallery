@@ -61,62 +61,20 @@ const decryptData = (encryptedData) => {
   }
 };
 
-const getInitialState = () => {
-  // Check if we're in the browser environment
-  if (typeof window !== "undefined") {
-    try {
-      const encryptedState = Cookies.get("redditGalleryState");
-      if (encryptedState) {
-        console.log("Found encrypted state in cookies");
-        const parsedState = decryptData(encryptedState);
-        if (parsedState) {
-          return {
-            scaleValue: 1.0,
-            isLoggedIn: parsedState.isLoggedIn || false,
-            isNSFWAllowed: parsedState.isNSFWAllowed || false,
-            accessToken: parsedState.accessToken || null,
-            username: parsedState.username || null,
-            profilePicture: parsedState.profilePicture || null,
-            isAdult: parsedState.isAdult || false,
-            searchHistory: parsedState.searchHistory || [], // Add search history
-          };
-        }
-      }
-
-      // Try to load history from localStorage if not in cookies
-      const savedHistory = localStorage.getItem("redditGalleryHistory");
-      if (savedHistory) {
-        try {
-          return {
-            scaleValue: 1.0,
-            isLoggedIn: false,
-            isNSFWAllowed: false,
-            accessToken: null,
-            username: null,
-            profilePicture: null,
-            isAdult: false,
-            searchHistory: JSON.parse(savedHistory), // Load from localStorage
-          };
-        } catch (e) {
-          console.error("Failed to parse history from localStorage:", e);
-        }
-      }
-    } catch (error) {
-      console.error("Error parsing state from cookies:", error);
-    }
-  }
-
-  return {
-    scaleValue: 1.0,
-    isLoggedIn: false,
-    isNSFWAllowed: false,
-    accessToken: null,
-    username: null,
-    profilePicture: null,
-    isAdult: false,
-    searchHistory: [], // Initialize empty history
-  };
+// Always return default state for initial render to avoid hydration mismatch.
+// Persisted data (cookies/localStorage) is loaded via useEffect after mount.
+const defaultState = {
+  scaleValue: 1.0,
+  isLoggedIn: false,
+  isNSFWAllowed: false,
+  accessToken: null,
+  username: null,
+  profilePicture: null,
+  isAdult: false,
+  searchHistory: [],
 };
+
+const getInitialState = () => defaultState;
 
 // Add history actions to the reducer
 function appReducer(state, action) {
@@ -210,59 +168,85 @@ AppContext.displayName = "AppContext";
 
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, getInitialState());
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  // Save state to cookies whenever it changes
+  // Restore persisted state from cookies/localStorage after mount (avoids hydration mismatch)
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Create a serializable version of the state
-      const serializableState = {
-        ...state,
-        // Store only essential token information, not the entire Reddit object
-        accessToken: state.accessToken
-          ? {
-              accessToken: state.accessToken.accessToken,
-              refreshToken: state.accessToken.refreshToken,
-              tokenExpiration: state.accessToken.tokenExpiration || null,
-              scope: state.accessToken.scope || null,
-              // Add any other necessary primitive values from the token
-            }
-          : null,
-      };
-
-      try {
-        // Encrypt the state before storing
-        const encryptedState = encryptData(serializableState);
-        if (encryptedState) {
-          Cookies.set("redditGalleryState", encryptedState, {
-            expires: 7,
-            path: "/",
-            sameSite: "Lax",
-            secure: process.env.NODE_ENV === "production", // Use secure cookies in production
-          });
-          console.log("Encrypted cookie saved successfully");
+    try {
+      const encryptedState = Cookies.get("redditGalleryState");
+      if (encryptedState) {
+        console.log("Found encrypted state in cookies");
+        const parsedState = decryptData(encryptedState);
+        if (parsedState) {
+          if (parsedState.isLoggedIn) {
+            dispatch({
+              type: "LOGIN",
+              payload: {
+                accessToken: parsedState.accessToken,
+                username: parsedState.username,
+                profilePicture: parsedState.profilePicture,
+                isAdult: parsedState.isAdult,
+              },
+            });
+          }
+          if (parsedState.isNSFWAllowed) {
+            dispatch({ type: "ALLOW_NSFW" });
+          }
+          if (parsedState.searchHistory && parsedState.searchHistory.length > 0) {
+            dispatch({ type: "LOAD_HISTORY", payload: parsedState.searchHistory });
+          }
         }
-      } catch (error) {
-        console.error("Error saving encrypted cookie:", error);
       }
-      console.log("Current state:", state);
-      // console.log("Cookie value:", Cookies.get("redditGalleryState"));
-    }
-  }, [state]);
 
-  // Load search history from localStorage on initial render
-  useEffect(() => {
-    if (typeof window !== "undefined") {
+      // Also try loading history from localStorage as fallback
       const savedHistory = localStorage.getItem("redditGalleryHistory");
       if (savedHistory) {
         try {
           const parsedHistory = JSON.parse(savedHistory);
-          dispatch({ type: "LOAD_HISTORY", payload: parsedHistory });
+          if (parsedHistory.length > 0) {
+            dispatch({ type: "LOAD_HISTORY", payload: parsedHistory });
+          }
         } catch (e) {
           console.error("Error parsing search history:", e);
         }
       }
+    } catch (error) {
+      console.error("Error restoring state:", error);
     }
+    setIsHydrated(true);
   }, []);
+
+  // Save state to cookies whenever it changes (skip until hydrated to avoid overwriting with defaults)
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    // Create a serializable version of the state
+    const serializableState = {
+      ...state,
+      accessToken: state.accessToken
+        ? {
+            accessToken: state.accessToken.accessToken,
+            refreshToken: state.accessToken.refreshToken,
+            tokenExpiration: state.accessToken.tokenExpiration || null,
+            scope: state.accessToken.scope || null,
+          }
+        : null,
+    };
+
+    try {
+      const encryptedState = encryptData(serializableState);
+      if (encryptedState) {
+        Cookies.set("redditGalleryState", encryptedState, {
+          expires: 7,
+          path: "/",
+          sameSite: "Lax",
+          secure: process.env.NODE_ENV === "production",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving encrypted cookie:", error);
+    }
+  }, [state, isHydrated]);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>
