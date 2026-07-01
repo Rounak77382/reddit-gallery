@@ -6,10 +6,16 @@ export async function GET(request) {
   const code = searchParams.get("code");
   const state = searchParams.get("state");
 
-  // Get the host from the request URL
-  const host = request.headers.get("host");
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-  const redirectUri = `${protocol}://${host}/api/auth/callback`;
+  const isProd = process.env.NODE_ENV === "production";
+  
+  // PROXY LOGIC: If we are on Vercel (production), but the state says "_local",
+  // it means you started the login from localhost. We must forward the code back to localhost!
+  if (isProd && state && state.endsWith("_local")) {
+    return NextResponse.redirect(`http://localhost:3000/api/auth/callback?code=${code}&state=${state}`);
+  }
+
+  // The redirectUri here MUST exactly match the one used in authorize/route.js
+  const redirectUri = "https://reddit-gallery-real.vercel.app/api/auth/callback";
 
   try {
     const r = await snoowrap.fromAuthCode({

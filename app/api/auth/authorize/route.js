@@ -13,12 +13,16 @@ function generateRandomState() {
   }
 }
 
-const state = generateRandomState();
-
 export async function GET(request) {
-  const host = request.headers.get("host");
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-  const redirectUri = `${protocol}://${host}/api/auth/callback`;
+  const isProd = process.env.NODE_ENV === "production";
+  
+  // Always use the Vercel URL for Reddit OAuth, because Reddit only allows one registered URI
+  const redirectUri = "https://reddit-gallery-real.vercel.app/api/auth/callback";
+  
+  // Generate a fresh state and append '_local' if we are in development
+  const freshState = generateRandomState();
+  const state = isProd ? freshState : `${freshState}_local`;
+
   console.log("RedirectUri : ", redirectUri);
 
   let authUrl = snoowrap.getAuthUrl({

@@ -39,7 +39,7 @@ const HLSPlayer = memo(
 
       const handleNonHLSVideo = async () => {
         try {
-          const response = await fetch(url);
+          const response = await fetch(url, { referrerPolicy: "no-referrer" });
           const blob = await response.blob();
           if (!isMounted) return;
           const newBlobUrl = URL.createObjectURL(blob);
